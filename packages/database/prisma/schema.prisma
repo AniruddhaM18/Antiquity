@@ -7,16 +7,17 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output = "../generated/client"
+  output   = "../generated/client"
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String
-  password      String
-  role          ROLE
-  createdAt     DateTime @default(now())
+  id             String          @id @default(cuid())
+  name           String
+  email          String
+  password       String
+  role           ROLE
+  createdAt      DateTime        @default(now())
+  contestMembers ContestMember[]
 }
 
 enum ROLE {
@@ -25,59 +26,59 @@ enum ROLE {
 }
 
 model Contest {
-  id          String @id @default(cuid())
+  id          String          @id @default(cuid())
   title       String
   description String
   createdBy   String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime        @default(now())
   questions   Question[]
   live        LiveContest?
   members     ContestMember[]
 }
 
 model LiveContest {
-  id           String @id @default(cuid())
-  contestId    String @unique
-  currentIndex Int @default(0)
-  startedAt    DateTime @default(now())
+  id           String         @id @default(cuid())
+  contestId    String         @unique
+  currentIndex Int            @default(0)
+  startedAt    DateTime       @default(now())
   endedAt      DateTime
-  contest      Contest @relation(fields: [contestId], references: [id])
+  contest      Contest        @relation(fields: [contestId], references: [id])
   responses    LiveResponse[]
 }
 
 model Question {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   contestId String
   text      String
-  options   Json
+  options   String[]
   correct   Int
-  points    Int @default(10)
-  contest   Contest @relation(fields: [contestId], references: [id])
+  points    Int      @default(10)
+  contest   Contest  @relation(fields: [contestId], references: [id])
 }
 
 model LiveResponse {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   liveContestId String
   userId        String
   questionIndex Int
   selected      Int
   isCorrect     Boolean
-  answeredAt    DateTime @default(now())
+  answeredAt    DateTime    @default(now())
   liveContest   LiveContest @relation(fields: [liveContestId], references: [id])
   @@unique([liveContestId, userId, questionIndex])
 }
 
 model ContestMember {
-  id        String @id @default(cuid())
+  id        String      @id @default(cuid())
   userId    String
   contestId String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contest   Contest     @relation(fields: [contestId], references: [id], onDelete: Cascade)
   role      ContestRole
   @@unique([userId, contestId])
-  contests  Contest[]
 }
 
 enum ContestRole {
   HOST
   PARTICIPANT
 }
-
