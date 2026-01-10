@@ -11,16 +11,41 @@ generator client {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String
-  email          String
-  password       String
-  role           ROLE
-  createdAt      DateTime        @default(now())
+  id        String        @id @default(cuid())
+  name      String?
+  email     String        @unique
+  image     String?
+  role      PlatformRole @default(user)
+  createdAt DateTime      @default(now())
+
+  // Better Auth relations
+  accounts  Account[]
+  sessions  Session[]
+
+  // your app logic
   contestMembers ContestMember[]
 }
 
-enum ROLE {
+//Better auth Tables
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+
+enum PlatformRole {
   user
   admin
 }
