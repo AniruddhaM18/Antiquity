@@ -1,39 +1,24 @@
 import dotenv from "dotenv";
 dotenv.config(); 
-
-import { prisma } from "@repo/database";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./auth";
 import express from "express";
+import contestRouter from "./routes/contestRoutes";
 const app = express();
 
 app.use(express.json());
 
-app.post("/signup", async(req , res)=>{
-    const {name, email} = req.body;
-    if(!name && !email){
-        return res.status(401).json({
-            message: "invalid inputs"
-        })
-    }
-
-    const user = await prisma.user.create({
-        data: {
-            name,
-            email
-        }
-    })
-
-    if(!user){
-        return res.status(401).json({
-            message: "unable to create"
-        })
-    }
-
-    return res.status(201).json({
-        message: "user created successfully",
-        user
+//check route
+app.post("/health", (req, res)=> {
+    res.json({
+        message: "Antiquity, ageing like a fine wine"
     })
 })
 
+//Auth - this time managed by betterauth
+app.all("/api/auth/*", toNodeHandler(auth));
+//contest rouetes bitch
+app.use("/api/", contestRouter);
 
 
 app.listen(3000, ()=> {
