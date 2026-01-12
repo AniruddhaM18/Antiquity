@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Card,
   CardContent,
@@ -13,9 +14,32 @@ import { Label } from "@/components/ui/label"
 
 type ContestCardProps = {
   onClose: () => void
+  onCreate: (data: {
+    title: string
+    description: string
+    duration: number
+  }) => void
 }
 
-export function ContestCard({ onClose }: ContestCardProps) {
+export function ContestCard({ onClose, onCreate }: ContestCardProps) {
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [duration, setDuration] = useState<number | "">("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!title.trim()) return
+    if (!description.trim()) return
+    if (typeof duration !== "number" || duration < 1) return
+
+    onCreate({
+      title,
+      description,
+      duration,
+    })
+  }
+
   return (
     <Card className="relative w-full max-w-sm">
       {/* Close button */}
@@ -36,30 +60,42 @@ export function ContestCard({ onClose }: ContestCardProps) {
       </CardHeader>
 
       <CardContent className="text-center">
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="title" className="">Title</Label>
+              <Label htmlFor="title" className="">
+                Title
+              </Label>
               <Input
                 id="title"
                 type="title"
                 placeholder="Quiz Contest"
                 required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 className="border border-zinc-600 focus:border-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="title" className="">Description</Label>
+              <Label htmlFor="description" className="">
+                Description
+              </Label>
               <Input
-                id="title"
+                id="description"
                 type="title"
                 placeholder="MCQ based contest"
                 required
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="border border-zinc-600 focus:border-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="duration">
+                Duration (minutes)
+              </Label>
 
               <Input
                 id="duration"
@@ -69,8 +105,17 @@ export function ContestCard({ onClose }: ContestCardProps) {
                 step={1}
                 placeholder="Upto- 60 mins"
                 required
+                value={duration}
+                onChange={(e) =>
+                  setDuration(
+                    e.target.value === ""
+                      ? ""
+                      : Number(e.target.value)
+                  )
+                }
                 className="border border-zinc-600
-    focus:border-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"/>
+              focus:border-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
             </div>
           </div>
         </form>
@@ -79,6 +124,7 @@ export function ContestCard({ onClose }: ContestCardProps) {
       <CardFooter>
         <button
           type="submit"
+          onClick={handleSubmit}
           className="neo-btn w-full rounded-md"
         >
           Create Contest
