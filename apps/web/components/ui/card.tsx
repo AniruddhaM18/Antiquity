@@ -9,17 +9,17 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card"
       className={cn(
         `
-        bg-[#1c1f26]
+        bg-neutral-900
         text-neutral-100
         flex flex-col gap-6
         rounded-2xl
         py-6
 
         /* Default = pressed (inset neumorphism) */
-        shadow-[inset_6px_6px_12px_#14161c,inset_-6px_-6px_12px_#242833]
+        shadow-[inset_6px_6px_12px_rgba(0,0,0,0.8),inset_-6px_-6px_12px_rgba(255,255,255,0.06)]
 
         /* Keep hover visually identical */
-        hover:shadow-[inset_6px_6px_12px_#14161c,inset_-6px_-6px_12px_#242833]
+        hover:shadow-[inset_6px_6px_12px_rgba(0,0,0,0.8),inset_-6px_-6px_12px_rgba(255,255,255,0.06)]
 
         /* Subtle smoothing only (no visual jump) */
         transition-shadow
@@ -30,8 +30,40 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  )
+  );
 }
+
+//normal- not pressed css
+
+// function Card({ className, ...props }: React.ComponentProps<"div">) {
+//   return (
+//     <div
+//       data-slot="card"
+//       className={cn(
+//         `
+//         bg-neutral-900
+//         text-neutral-100
+//         flex flex-col gap-6
+//         rounded-2xl
+//         py-6
+
+//         /* Default = raised neumorphism */
+//         shadow-[6px_6px_14px_rgba(0,0,0,0.85),-6px_-6px_14px_rgba(255,255,255,0.05)]
+
+//         /* Hover = very subtle soften (no pop) */
+//         hover:shadow-[4px_4px_12px_rgba(0,0,0,0.8),-4px_-4px_12px_rgba(255,255,255,0.06)]
+
+//         /* Smooth only */
+//         transition-shadow
+//         duration-200
+//         ease-out
+//         `,
+//         className
+//       )}
+//       {...props}
+//     />
+//   );
+// }
 
 /* ───────────────── Header ───────────────── */
 
@@ -52,6 +84,9 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     />
   )
 }
+
+
+
 
 /* ───────────────── Title ───────────────── */
 

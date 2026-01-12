@@ -95,6 +95,49 @@
     inset -3px -3px 6px var(--light);
 }
 
+.zinc-sub {
+  /* Zinc-800 surfaces (subtle) */
+  --base: #27272a;        /* zinc-800 */
+  --light: #2f2f33;       /* very soft highlight */
+  --dark: #18181b;        /* zinc-900 */
+
+  --text: #e4e4e7;        /* zinc-200 */
+  --text-muted: #a1a1aa;  /* zinc-400 */
+
+  background: var(--base);
+  color: var(--text);
+
+  font-size: 14px;
+  font-weight: 500;
+  height: 34px;
+  padding: 0 14px;
+
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+
+  /* SUBTLE elevation (key change) */
+  box-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.45),
+    -2px -2px 4px rgba(255, 255, 255, 0.04);
+
+  transition:
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.zinc-sub:hover {
+  color: var(--text-muted);
+}
+
+.zinc-sub:active {
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+}
+
+
+
 
 
 :root {

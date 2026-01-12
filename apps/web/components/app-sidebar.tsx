@@ -3,16 +3,16 @@
 import * as React from "react"
 import Image from "next/image"
 import {
-  IconCamera,
   IconDashboard,
   IconDatabase,
   IconFolder,
   IconSearch,
   IconSettings,
   IconUsers,
+  IconChevronRight,
 } from "@tabler/icons-react"
 
-import logo from "../public/Logo.png"
+import logo from "../public/anbw.png"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
@@ -27,6 +27,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
+/* -------------------- TYPES -------------------- */
+
+type Contest = {
+  id: string
+  title: string
+  duration: number
+}
+
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  onCreateContest: () => void
+  contests?: Contest[]
+  onSelectContest?: (contest: Contest) => void
+}
 
 /* -------------------- DATA -------------------- */
 
@@ -74,16 +88,12 @@ const data = {
   ],
 }
 
-/* -------------------- TYPES -------------------- */
-
-type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  onCreateContest: () => void
-}
-
 /* -------------------- COMPONENT -------------------- */
 
 export function AppSidebar({
   onCreateContest,
+  contests = [],
+  onSelectContest,
   ...props
 }: AppSidebarProps) {
   return (
@@ -138,6 +148,22 @@ export function AppSidebar({
           items={data.navMain}
           onCreateContest={onCreateContest}
         />
+
+        {/* ===== USER CONTESTS (LOGIC ONLY) ===== */}
+        {contests.length > 0 && (
+          <SidebarMenu>
+            {contests.map((contest) => (
+              <SidebarMenuItem key={contest.id}>
+                <SidebarMenuButton
+                  onClick={() => onSelectContest?.(contest)}
+                >
+                  <IconChevronRight className="size-4" />
+                  <span>{contest.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        )}
 
         <NavDocuments items={data.documents} />
 
