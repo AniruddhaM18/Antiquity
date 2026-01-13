@@ -1,6 +1,7 @@
 import { Request, Response, text } from "express";
 import { addQuestionSSchema, createContestSchema } from "../schema/contestSchema";
 import { prisma } from "@repo/database";
+import { ContestRole } from "../../../../packages/database/generated/client";
 
 //create contest
 export async function createContest(req: Request, res: Response) {
@@ -21,7 +22,7 @@ export async function createContest(req: Request, res: Response) {
                 members: {
                     create: {
                         userId: req.user!.id,
-                        role: "HOST"
+                        role: ContestRole.HOST
                     }
                 }
             },

@@ -1,10 +1,10 @@
-import z, { email } from "zod";
+import { z } from "zod";
 
 export const signupSchema = z.object({
     name:z.string(),
-    email: z.email(),
+    email: z.string(),
     password: z.string().min(6),
-    role: z.enum(["admin","user"])
+    role: z.enum(["admin","user"]).optional()
 });
 
 export const signinSchema = z.object({
