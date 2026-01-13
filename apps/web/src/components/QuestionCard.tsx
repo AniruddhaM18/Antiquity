@@ -53,7 +53,7 @@ export function AddQuestionCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Question {index + 1}</CardTitle>
-        <Button variant="destructive" size="sm" onClick={onRemove}>
+        <Button className="bg-red-500/70" variant="destructive" size="sm" onClick={onRemove}>
           Remove
         </Button>
       </CardHeader>
@@ -99,6 +99,7 @@ export function AddQuestionCard({
 
           <Button
             size="sm"
+            className="bg-zinc-300/80"
             variant="secondary"
             onClick={addOption}
           >

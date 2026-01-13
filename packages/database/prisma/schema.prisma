@@ -30,6 +30,12 @@ model User {
   @@map("user")
 }
 
+enum PlatformRole {
+  user
+  admin
+}
+
+
 // Better Auth Tables
 model Session {
   id        String   @id @default(cuid())
@@ -81,10 +87,6 @@ model Verification {
   @@map("verification")
 }
 
-enum PlatformRole {
-  user
-  admin
-}
 
 // Your App Models
 model Contest {
