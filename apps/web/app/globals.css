@@ -3,6 +3,94 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer components{
+
+  @layer components {
+
+  .neom-button {
+    background: linear-gradient(
+      145deg,
+      #5566E8,
+      #3F49B0
+    );
+
+    color: #ffffff;
+
+    font-size: 0.8125rem;   /* ~13px */
+    font-weight: 500;
+
+    padding: 0.375rem 1rem; /* px-4 py-1.5 */
+    border-radius: 0.5rem;  /* tighter */
+
+    border: 1px solid rgba(160, 175, 255, 0.3);
+
+    box-shadow:
+      2px 2px 5px rgba(87, 106, 231, 0.22),
+      -1px -1px 3px rgba(255, 255, 255, 0.08),
+      inset 0 1px 1px rgba(210, 220, 255, 0.16);
+
+    text-shadow:
+      0 0.5px 0.5px rgba(0, 0, 0, 0.25);
+
+    cursor: pointer;
+    transition: all 160ms ease;
+  }
+
+  .neom-button:hover {
+    background: linear-gradient(
+      145deg,
+      #6277FF,
+      #4D5ED6
+    );
+
+    box-shadow:
+      inset 1px 1px 3px rgba(0, 0, 0, 0.45),
+      inset -1px -1px 3px rgba(255, 255, 255, 0.1);
+  }
+
+  .neom-button:active {
+    transform: translateY(0.5px);
+
+    box-shadow:
+      inset 2px 2px 4px rgba(0, 0, 0, 0.55),
+      inset -1px -1px 3px rgba(255, 255, 255, 0.08);
+  }
+}
+
+.gray-button {
+    background-color: #171717; /* neutral-900 */
+    color: #d4d4d4;           /* neutral-300 */
+
+    font-size: 0.8125rem;     /* same as compact neom-button (~13px) */
+    font-weight: 500;
+
+    padding: 0.375rem 1rem;   /* px-4 py-1.5 */
+    border-radius: 0.5rem;  /* rounded-medium */
+
+    border: 1px solid rgba(38, 38, 38, 0.5); /* neutral-800/50 */
+
+    box-shadow:
+      4px 4px 10px rgba(0, 0, 0, 0.8),
+      -4px -4px 10px rgba(255, 255, 255, 0.04);
+
+    cursor: pointer;
+    transition: all 200ms ease;
+  }
+
+  .gray-button:hover {
+    box-shadow:
+      inset 3px 3px 6px rgba(0, 0, 0, 0.7),
+      inset -3px -3px 6px rgba(255, 255, 255, 0.05);
+  }
+
+  .gray-button:active {
+    transform: translateY(0.5px);
+
+    box-shadow:
+      inset 4px 4px 8px rgba(0, 0, 0, 0.85),
+      inset -2px -2px 6px rgba(255, 255, 255, 0.04);
+  }
+
 .neo-btn {
   --surface-hi: #1c1c1c;  /* neutral-900 */
   --surface-lo: #0f0f0f;  /* neutral-950 */
@@ -50,6 +138,64 @@
     inset 4px 4px 8px rgba(0, 0, 0, 0.8),
     inset -4px -4px 8px rgba(255, 255, 255, 0.03);
 }
+
+
+.grad-blue {
+    background: linear-gradient(
+        360deg,
+        #4F7DFF 0%,
+        #4F7DFF 50%,
+        #5E8CFF 100%
+    );
+
+    color: #EAF0FF;
+
+    text-shadow:
+        0px 0.52px 1.05px rgba(0, 30, 90, 0.18),
+        0px 1px 2px rgba(0, 40, 120, 0.28),
+        0px 0.5px 1px rgba(0, 0, 0, 0.35) inset;
+
+    box-shadow:
+        inset 0 1px 2px -1px rgba(220, 235, 255, 0.35),
+        inset 0 0 1px rgba(0, 0, 0, 0.05),
+        inset 0 -1px 0.5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 1px rgba(220, 235, 255, 0.25),
+        0 2px 4px -1px rgba(0, 25, 80, 0.55);
+
+    border: 1px solid transparent;
+    border-top-color: #8FB1FF;
+
+    outline: 1px solid #0B1530;
+
+    backdrop-filter: blur(40px);
+    transition: all 120ms ease-out;
+}
+
+.grad-blue:hover {
+    background: linear-gradient(
+        180deg,
+        #4B76F0 0%,
+        #436DE6 100%
+    );
+
+    color: #FFFFFF;
+
+    backdrop-filter: blur(40.73px);
+
+    border: 1px solid transparent;
+    border-top-color: rgba(200, 220, 255, 0.22);
+    border-bottom-color: rgba(200, 220, 255, 0.14);
+
+    box-shadow:
+        inset 0 0 1px rgba(0, 0, 0, 0.05),
+        inset 0 -1px 0.5px rgba(0, 0, 0, 0.05),
+        inset 0 -1px 2px rgba(200, 220, 255, 0.24),
+        inset 0 2px 4px rgba(0, 30, 100, 0.30),
+        inset 0 -1px 2px rgba(0, 20, 70, 0.40);
+}
+
+
+
 
 .zinc-btn {
   /* Zinc surfaces */
@@ -136,6 +282,28 @@
     inset -2px -2px 4px rgba(255, 255, 255, 0.05);
 }
 
+  .bento-card {
+    background-color: #0f1115;
+    border: 1px solid rgba(115, 115, 115, 0.25);
+
+    box-shadow:
+      4px 4px 12px rgba(0, 0, 0, 0.75),
+      -4px -4px 12px rgba(255, 255, 255, 0.025);
+
+    transition:
+      box-shadow 300ms ease,
+      transform 300ms ease;
+  }
+
+  .bento-card:hover {
+    box-shadow:
+      inset 3px 3px 8px rgba(0, 0, 0, 0.7),
+      inset -3px -3px 8px rgba(255, 255, 255, 0.035);
+    transform: translateY(-1px);
+  }
+
+   
+}
 
 
 
@@ -237,8 +405,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
 
 .dark {
   --background: oklch(0.145 0 0);
