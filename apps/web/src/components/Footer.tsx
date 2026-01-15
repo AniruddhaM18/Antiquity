@@ -14,10 +14,11 @@ export default function Footer() {
   }, []);
 
   const gradient =
-    "bg-clip-text text-transparent bg-linear-to-b from-neutral-300 via-neutral-200 to-neutral-600";
+    "bg-clip-text text-transparent bg-linear-to-b from-neutral-300 via-indigo-200/90 to-[#1e1b4b]"
 
   return (
-    <footer className="bg-[#0f1115] text-neutral-300 mt-40">
+    <footer className="mt-40 text-neutral-300 bg-gradient-to-t from-[#576ae7]/30 via-[#4958be]/20 to-black"
+>
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Top */}
@@ -40,7 +41,7 @@ export default function Footer() {
         </div>
 
         {/* TITLE — CORRECT WAY */}
-        <div className="flex justify-center pt-26 pb-12 overflow-visible">
+        <div className="flex justify-center pt-26 overflow-visible">
           <h1
             className="
               text-[22vw]

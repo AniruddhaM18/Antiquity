@@ -4,8 +4,11 @@ import Link from "next/link";
 
 export function Navbar() {
   return (
-    <nav className=" top-0 inset-x-0 z-50 bg-[#0f1115]">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <nav className="relative top-0 inset-x-0 z-50
+        bg-[#0f1115]/20
+        backdrop-blur-lg
+        supports-[backdrop-filter]:bg-[#0f1115]/60]">
+      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
 
         {/* Logo */}
         <div className="flex items-center gap-3">
@@ -18,23 +21,15 @@ export function Navbar() {
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
         {/* Button */}
         <Link href="/auth/signup" className="hidden md:block">
           <button
-            className="
-              px-4 py-2 rounded-lg text-sm font-medium mr-6
-              bg-[#0f1115] text-mithai
-              shadow-[4px_4px_10px_rgba(0,0,0,0.9),-4px_-4px_10px_rgba(255,255,255,0.05)]
-              hover:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.8),inset_-3px_-3px_6px_rgba(255,255,255,0.06)]
-              active:scale-[0.98]
-              transition-all duration-150
-            "
-          >
+            className="gray-button">
             Sign in
           </button>
         </Link>
-         <button className="neo-btn">
+         <button className="neom-button">
             Get Started
           </button>
       </div>
