@@ -1,40 +1,20 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `emailVerified` on the `User` table. All the data in the column will be lost.
-  - Made the column `email` on table `User` required. This step will fail if there are existing NULL values in that column.
-
-*/
 -- CreateEnum
-CREATE TYPE "ROLE" AS ENUM ('user', 'admin');
+CREATE TYPE "ROLE" AS ENUM ('USER', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "ContestRole" AS ENUM ('HOST', 'PARTICIPANT');
 
--- AlterTable
-ALTER TABLE "User" DROP COLUMN "emailVerified",
-ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN     "image" TEXT,
-ADD COLUMN     "role" "ROLE" NOT NULL DEFAULT 'user',
-ALTER COLUMN "email" SET NOT NULL;
-
 -- CreateTable
-CREATE TABLE "Session" (
+CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "ROLE" NOT NULL DEFAULT 'USER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Account" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "provider" TEXT NOT NULL,
-    "providerAccountId" TEXT NOT NULL,
-
-    CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -54,7 +34,7 @@ CREATE TABLE "LiveContest" (
     "contestId" TEXT NOT NULL,
     "currentIndex" INTEGER NOT NULL DEFAULT 0,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "endedAt" TIMESTAMP(3) NOT NULL,
+    "endedAt" TIMESTAMP(3),
 
     CONSTRAINT "LiveContest_pkey" PRIMARY KEY ("id")
 );
@@ -95,7 +75,7 @@ CREATE TABLE "ContestMember" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LiveContest_contestId_key" ON "LiveContest"("contestId");
@@ -107,19 +87,13 @@ CREATE UNIQUE INDEX "LiveResponse_liveContestId_userId_questionIndex_key" ON "Li
 CREATE UNIQUE INDEX "ContestMember_userId_contestId_key" ON "ContestMember"("userId", "contestId");
 
 -- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "LiveContest" ADD CONSTRAINT "LiveContest_contestId_fkey" FOREIGN KEY ("contestId") REFERENCES "Contest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Question" ADD CONSTRAINT "Question_contestId_fkey" FOREIGN KEY ("contestId") REFERENCES "Contest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LiveContest" ADD CONSTRAINT "LiveContest_contestId_fkey" FOREIGN KEY ("contestId") REFERENCES "Contest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Question" ADD CONSTRAINT "Question_contestId_fkey" FOREIGN KEY ("contestId") REFERENCES "Contest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LiveResponse" ADD CONSTRAINT "LiveResponse_liveContestId_fkey" FOREIGN KEY ("liveContestId") REFERENCES "LiveContest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LiveResponse" ADD CONSTRAINT "LiveResponse_liveContestId_fkey" FOREIGN KEY ("liveContestId") REFERENCES "LiveContest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ContestMember" ADD CONSTRAINT "ContestMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
