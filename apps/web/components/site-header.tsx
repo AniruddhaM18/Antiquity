@@ -24,7 +24,8 @@ export function SiteHeader() {
 
         <div className="ml-auto">
           <button className="neo-btn h-8 flex items-center justify-center">
-            Launch Contest <BsLightningCharge className="ml-2 text-amber-200" />
+            Launch Contest
+            {/* <BsLightningCharge className="ml-2 text-amber-200" /> */}
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
-import { ContestCard } from "@/src/components/ContestCard";
+import Beams from "@/src/components/Beams";
 
-export default function Testpage(){
-    return(
-        <div className="flex items-center justify-center mt-40">
-            <ContestCard />
-        </div>
-    );
+export default function TestPage() {
+  return (
+    <div className="h-screen bg-black">
+      <Beams beamNumber={10} rotation={0} />
+    </div>
+  );
 }
