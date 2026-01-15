@@ -4,21 +4,21 @@
 datasource db {
   provider = "postgresql"
 }
+
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/client"
 }
 
-
 // User & Roles
 model User {
-  id             String          @id @default(cuid())
-  name           String
-  email          String          @unique
-  password       String
-  role           ROLE            @default(user)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      ROLE     @default(user)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   contestMembers ContestMember[]
 }
@@ -30,11 +30,11 @@ enum ROLE {
 
 // Contest Models
 model Contest {
-  id          String          @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String
   createdBy   String
-  createdAt   DateTime        @default(now())
+  createdAt   DateTime @default(now())
 
   questions Question[]
   live      LiveContest?
@@ -42,10 +42,10 @@ model Contest {
 }
 
 model LiveContest {
-  id           String   @id @default(cuid())
-  contestId    String   @unique
-  currentIndex Int      @default(0)
-  startedAt    DateTime @default(now())
+  id           String    @id @default(cuid())
+  contestId    String    @unique
+  currentIndex Int       @default(0)
+  startedAt    DateTime  @default(now())
   endedAt      DateTime?
 
   contest   Contest        @relation(fields: [contestId], references: [id], onDelete: Cascade)
@@ -55,7 +55,7 @@ model LiveContest {
 model Question {
   id        String   @id @default(cuid())
   contestId String
-  text      String
+  question  String
   options   String[]
   correct   Int
   points    Int      @default(10)
