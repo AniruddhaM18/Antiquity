@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/authMiddleware";
 import { endLiveContest, getCurrentQuestion, getLiveStatus, moveToNextQuestion, startLiveContest } from "../controllers/liveContestController";
+import { getMyResponse, submitAnswer } from "../controllers/responseController";
 
 const liveContestRouter: Router = Router();
 
@@ -13,5 +14,8 @@ liveContestRouter.post("/live/:liveContestId/end", authMiddleware, endLiveContes
 liveContestRouter.get("/live/:liveContestId/current", authMiddleware, getCurrentQuestion);
 liveContestRouter.get("/live/:liveContestId/status", authMiddleware, getLiveStatus);
 
+//responses - via responseController
+liveContestRouter.post("/live/:liveContestId/respond", authMiddleware, submitAnswer);
+liveContestRouter.post("/live/:liveContestId/my-responses", authMiddleware, getMyResponse);
 
 export default liveContestRouter;

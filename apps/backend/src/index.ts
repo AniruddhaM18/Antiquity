@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import contestRouter from "./routes/contestRoutes";
 import authRouter from "./routes/authRoutes";
 import participantRouter from "./routes/participantRouter";
+import liveContestRouter from "./routes/liveContestRoutes";
 const app = express();
 const PORT = process.env.PORT!;
 //cors before routes
@@ -33,6 +34,9 @@ app.use("/api/auth", authRouter);
 app.use("/api/", contestRouter);
 //participant routes
 app.use("/api", participantRouter);
+
+//live contest & ressponses routes
+app.use("/api/", liveContestRouter);
 
 
 app.listen(PORT, ()=> {
