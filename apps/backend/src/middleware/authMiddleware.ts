@@ -1,38 +1,50 @@
 import { Request, Response, NextFunction } from "express";
-import { auth } from "../auth";
-import { fromNodeHeaders } from "better-auth/node";
+import jwt from "jsonwebtoken";
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+//common auth middleware
+export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  const authHeaders = req.headers.authorization;
+
+  if (!authHeaders || !authHeaders.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized"
+    })
+  }
+
+  const token = authHeaders.split(" ")[1]
+
   try {
-    const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      userId: string,
+      email: string,
+      role: "admin" | "user"
     }
 
-    // Attach user to request
     req.user = {
-      id: session.user.id,
-      email: session.user.email,
-      role: (session.user.role as "admin" | "user") || "user",
-    };
-
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: "Unauthorized" });
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role
+    }
+    next()
+  } catch {
+    return res.status(401).json({
+      message: "Invalid token"
+    })
   }
-}
+};
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.user) {
-    return res.status(401).json({ error: "Unauthorized" });
+
+export async function requireRole(role: "admin" | "user") {
+  return(req:Request, res:Response, next: NextFunction) => {
+    if(req.user?.role !== role) {
+      return res.status(401).json({
+        message: "forbidden"
+      })
+    }
+    next()
   }
-
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-
-  next();
 }

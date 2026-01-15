@@ -22,7 +22,7 @@ export async function createContest(req: Request, res: Response) {
                 members: {
                     create: {
                         userId: req.user!.id,
-                        role: ContestRole.HOST
+                        role: ContestRole.host
                     }
                 }
             },
@@ -79,7 +79,7 @@ export async function addQuestion(req: Request, res: Response) {
                 members: {
                     where: {
                         userId: req.user!.id,
-                        role: "HOST"
+                        role: "host"
                     }
                 },
                 live: true //check if already live
@@ -194,7 +194,7 @@ export async function getContest(req: Request, res: Response) {
 
         //checking if user is host, if host - include answers
         const isHost = contest.members.some(
-            (m) => m.userId === req.user?.id && m.role === "HOST"
+            (m) => m.userId === req.user?.id && m.role === "host"
         );
 
         if (isHost) {
@@ -287,7 +287,7 @@ export async function deleteContest(req: Request, res: Response) {
                 members: {
                     where: {
                         userId: req.user!.id,
-                        role: "HOST"
+                        role: "host"
                     }
                 },
                 live: true,
