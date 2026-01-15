@@ -2,8 +2,6 @@ import { prisma } from "@repo/database";
 import { Request, Response } from "express";
 import { success } from "zod";
 import { ContestRole } from "../../../../packages/database/generated/client";
-import { ca, da, fa, tr } from "zod/locales";
-import { warnOnce } from "@prisma/client/runtime/client";
 
 export async function joinContest(req: Request, res: Response) {
     try {
@@ -48,7 +46,7 @@ export async function joinContest(req: Request, res: Response) {
             data: {
                 userId,
                 contestId,
-                role: ContestRole.PARTICIPANT
+                role: ContestRole.participant
             },
             include: {
                 user: {
@@ -104,7 +102,7 @@ export async function leaveContest(req:Request, res:Response){
         }
 
         //check if user is host
-        if(contest.members[0].role === "HOST"){
+        if(contest.members[0].role === "host"){
             return res.status(400).json({
                 success: false,
                 message: "HOST cannot leave the contest"
