@@ -1,182 +1,101 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-import {
-  IconDashboard,
-  IconDatabase,
-  IconFolder,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-  IconChevronRight,
-} from "@tabler/icons-react"
+import Image from "next/image";
+import logo from "../public/Loom.png";
 
-import logo from "../public/anbw.png"
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
+  SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 
-/* -------------------- TYPES -------------------- */
+import { Home, Trophy, Settings } from "lucide-react";
 
-type Contest = {
-  id: string
-  title: string
-  duration: number
-}
-
-type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  onCreateContest: () => void
-  contests?: Contest[]
-  onSelectContest?: (contest: Contest) => void
-}
-
-/* -------------------- DATA -------------------- */
-
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Contests",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-  ],
-}
-
-/* -------------------- COMPONENT -------------------- */
-
-export function AppSidebar({
-  onCreateContest,
-  contests = [],
-  onSelectContest,
-  ...props
-}: AppSidebarProps) {
+export function AppSidebar() {
   return (
     <Sidebar
-      collapsible="offcanvas"
-      style={
-        {
-          /* ===== APP-SPECIFIC SIDEBAR COLORS ===== */
-          "--sidebar": "18 18 20",
-          "--sidebar-foreground": "228 228 231",
-
-          "--sidebar-accent": "26 26 28",
-          "--sidebar-accent-foreground": "244 244 245",
-
-          "--sidebar-border": "255 255 255 / 0.06",
-          "--sidebar-ring": "255 255 255 / 0.12",
-        } as React.CSSProperties
-      }
-      {...props}
+      collapsible="icon"
+      className="bg-neutral-950 text-neutral-300 overflow-hidden"
     >
-      {/* ---------- HEADER ---------- */}
-      <SidebarHeader className="bg-neutral-900">
+<SidebarHeader className="h-14 border-b border-neutral-800">
+  <div
+    className="
+      flex h-full items-center px-2
+      justify-start
+      group-data-[collapsible=icon]:justify-center
+    "
+  >
+    <div className="flex items-center gap-3">
+      <div className="gradient-button w-9 h-9 rounded-sm flex items-center justify-center p-1 shrink-0">
+        <Image
+          src={logo}
+          alt="Logo"
+          width={256}
+          height={256}
+          priority
+        />
+      </div>
+
+      <span className="text-xl font-semibold text-slate-300 whitespace-nowrap group-data-[collapsible=icon]:hidden">
+        Antiquity
+      </span>
+    </div>
+  </div>
+</SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+            General
+          </SidebarGroupLabel>
+
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href="/dashboard">
+                  <Home className="size-4 shrink-0" />
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Dashboard
+                  </span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href="/contests">
+                  <Trophy className="size-4 shrink-0" />
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Contests
+                  </span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-neutral-800">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="!p-1.5 h-auto overflow-visible"
-            >
-              <a href="#">
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={logo}
-                    alt="Logo"
-                    width={36}
-                    height={36}
-                    className="shrink-0 object-contain"
-                    priority
-                  />
-                  <span className="text-2xl font-mono font-light text-zinc-100">
-                    Antiquity
-                  </span>
-                </div>
+            <SidebarMenuButton asChild>
+              <a href="/settings">
+                <Settings className="size-4 shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden">
+                  Settings
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarHeader>
-
-      {/* ---------- CONTENT ---------- */}
-      <SidebarContent className="bg-neutral-900">
-        <NavMain
-          items={data.navMain}
-          onCreateContest={onCreateContest}
-        />
-
-        {/* ===== USER CONTESTS (LOGIC ONLY) ===== */}
-        {contests.length > 0 && (
-          <SidebarMenu>
-            {contests.map((contest) => (
-              <SidebarMenuItem key={contest.id}>
-                <SidebarMenuButton
-                  onClick={() => onSelectContest?.(contest)}
-                >
-                  <IconChevronRight className="size-4" />
-                  <span>{contest.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        )}
-
-        <NavDocuments items={data.documents} />
-
-        <NavSecondary
-          items={data.navSecondary}
-          className="mt-auto"
-        />
-      </SidebarContent>
-
-      {/* ---------- FOOTER ---------- */}
-      <SidebarFooter className="bg-neutral-900 border-t border-white/5">
-        <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

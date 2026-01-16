@@ -11,3 +11,4 @@ export type Contest = {
   title: string
   duration: number // minutes
 }
+
