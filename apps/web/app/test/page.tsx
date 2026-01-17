@@ -1,9 +1,9 @@
-import Beams from "@/src/components/Beams";
+import { QuestionsCard } from "@/src/components/QuestionsCard";
 
 export default function TestPage() {
   return (
     <div className="h-screen bg-black">
-      <Beams beamNumber={10} rotation={0} />
+      <QuestionsCard questionNo={0} />
     </div>
   );
 }

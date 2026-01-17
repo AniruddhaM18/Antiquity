@@ -10,9 +10,8 @@ import {
   IconSignature,
   IconTableColumn,
 } from "@tabler/icons-react";
-import { BentoGrid, BentoGridItem } from "@/src/components/ui/bento-grid";
 
-export default function BentoGridDemo() {
+export function BentoGridDemo() {
   return (
     <BentoGrid className="max-w-4xl mx-auto">
       {items.map((item, i) => (
@@ -29,7 +28,7 @@ export default function BentoGridDemo() {
   );
 }
 const Skeleton = () => (
-  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-800 "></div>
+  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-neutral-900 dark:to-neutral-800 to-neutral-100"></div>
 );
 const items = [
   {
@@ -67,12 +66,12 @@ const items = [
     title: "The Joy of Creation",
     description: "Experience the thrill of bringing ideas to life.",
     header: <Skeleton />,
-    icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
+    icon: <IconBoxAlignTopLeft className="h-4 w-4 text-neutral-500" />,
   },
   {
     title: "The Spirit of Adventure",
     description: "Embark on exciting journeys and thrilling discoveries.",
     header: <Skeleton />,
-    icon: <IconSignature className="h-4 w-4 text-neutral-500" />,
+    icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
   },
 ];
