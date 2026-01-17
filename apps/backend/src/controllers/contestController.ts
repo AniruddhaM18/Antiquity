@@ -1,7 +1,6 @@
 import { Request, Response, text } from "express";
-import { addQuestionSSchema, createContestSchema } from "../schema/contestSchema";
+import { addQuestionSSchema, createContestSchema } from "../schema/contestSchema.js";
 import { prisma } from "@repo/database";
-import { ContestRole } from "../../../../packages/database/generated/client";
 
 //create contest
 export async function createContest(req: Request, res: Response) {
@@ -22,7 +21,7 @@ export async function createContest(req: Request, res: Response) {
                 members: {
                     create: {
                         userId: req.user!.id,
-                        role: ContestRole.host
+                        role: "host"
                     }
                 }
             },
@@ -119,9 +118,9 @@ export async function addQuestion(req: Request, res: Response) {
 
         //create questions in bulk
         const createdQuestions = await prisma.question.createMany({
-            data: questions.map((q) => ({
+            data: questions.map((q:any) => ({
                 contestId,
-                text: q.text,
+                question: q.text,
                 options: q.options,
                 correct: q.correct,
                 points: q.points || 10,
@@ -164,7 +163,7 @@ export async function getContest(req: Request, res: Response) {
                     // Don't expose correct answers to non-hosts
                     select: {
                         id: true,
-                        text: true,
+                        question: true,
                         options: true,
                         points: true,
                         correct: false, // Hide by default

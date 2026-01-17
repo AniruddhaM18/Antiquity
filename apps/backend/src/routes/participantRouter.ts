@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authMiddleware } from "../middleware/authMiddleware";
-import { getLeaderboardController, getMyContest, joinContest, leaveContest } from "../controllers/participantController";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { getLeaderboardController, getMyContest, joinContest, leaveContest } from "../controllers/participantController.js";
 import { router } from "better-auth/api";
 
 const participantRouter: Router = Router();

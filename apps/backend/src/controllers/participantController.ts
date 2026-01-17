@@ -1,7 +1,5 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
-import { success } from "zod";
-import { ContestRole } from "../../../../packages/database/generated/client";
 
 export async function joinContest(req: Request, res: Response) {
     try {
@@ -46,7 +44,7 @@ export async function joinContest(req: Request, res: Response) {
             data: {
                 userId,
                 contestId,
-                role: ContestRole.participant
+                role: "participant"
             },
             include: {
                 user: {

@@ -1,7 +1,6 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
-import { success } from "zod";
-import { id } from "zod/locales";
+
 
 //submit answer 
 export async function submitAnswer(req:Request, res:Response){

@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { signinSchema, signupSchema } from "../schema/authSchema";
+import { signinSchema, signupSchema } from "../schema/authSchema.js";
 import { prisma } from "@repo/database";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { success } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET!
 

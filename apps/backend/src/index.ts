@@ -1,12 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config(); 
+console.log(process.env)
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
-import contestRouter from "./routes/contestRoutes";
-import authRouter from "./routes/authRoutes";
-import participantRouter from "./routes/participantRouter";
-import liveContestRouter from "./routes/liveContestRoutes";
+import contestRouter from "./routes/contestRoutes.js";
+import authRouter from "./routes/authRoutes.js";
+import participantRouter from "./routes/participantRouter.js";
+import liveContestRouter from "./routes/liveContestRoutes.js";
 const app = express();
 const PORT = process.env.PORT!;
 //cors before routes

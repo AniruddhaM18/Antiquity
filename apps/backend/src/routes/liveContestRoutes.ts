@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { authMiddleware } from "../middleware/authMiddleware";
-import { endLiveContest, getCurrentQuestion, getLiveStatus, moveToNextQuestion, startLiveContest } from "../controllers/liveContestController";
-import { getMyResponse, submitAnswer } from "../controllers/responseController";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { endLiveContest, getCurrentQuestion, getLiveStatus, moveToNextQuestion, startLiveContest } from "../controllers/liveContestController.js";
+import { getMyResponse, submitAnswer } from "../controllers/responseController.js";
 
 const liveContestRouter: Router = Router();
 

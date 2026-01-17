@@ -1,7 +1,6 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
-import { promise, success } from "zod";
-import { ru } from "zod/locales";
+
 
 
 //start live contest - HOST OONLY

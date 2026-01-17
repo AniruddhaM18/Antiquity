@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { addQuestion, createContest, deleteContest, getAllContests, getContest } from "../controllers/contestController";
-import { authMiddleware, requireRole } from "../middleware/authMiddleware";
+import { addQuestion, createContest, deleteContest, getAllContests, getContest } from "../controllers/contestController.js";
+import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
 
 const contestRouter : Router = Router();
 
