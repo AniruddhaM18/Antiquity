@@ -14,18 +14,23 @@ export default function Home() {
     <div className="min-h-screen bg-neutral-950 text-neutral-200">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Beams
-          beamWidth={2.5}
-          beamNumber={16}
+          beamWidth={2}
+          beamHeight={15}
+          beamNumber={20}
           lightColor="#98a4f0"
-          noiseIntensity={1.15}
-          rotation={0}
+          speed={5}
+          noiseIntensity={1.75}
+          scale={0.2}
+          rotation={160}
         />
       </div>
 
       {/* FOREGROUND */}
       <div className="relative z-10">
         <Navbar />
+        <div className="pt-10">
         <HeroSection />
+        </div>
       </div>
 
       {/* FEATURES SECTION */}

@@ -1,15 +1,13 @@
 "use client"
 import React, { useState } from "react"
 import {
-  MoreHorizontal,
   CheckSquare,
   Trash2,
   GripVertical,
   Plus,
-  Clock,
   Hexagon,
-  ChevronDown,
   Check,
+  X,
 } from "lucide-react"
 
 type QuestionsCardProps = {
@@ -26,12 +24,14 @@ type QuestionsCardProps = {
     correct: number
     points: number
   }) => void
+  onDelete?: () => void
 }
 
 export function QuestionsCard({
   questionNo,
   value,
   onChange,
+  onDelete,
 }: QuestionsCardProps) {
   const [text, setText] = useState(value?.text ?? "")
   const [options, setOptions] = useState<string[]>(
@@ -76,13 +76,18 @@ export function QuestionsCard({
     <div className="w-full max-w-4xl min-h-[7.75rem] bg-neutral-900 rounded-lg border border-neutral-700 shadow-xl text-sm text-neutral-200 m-10">
       {/* Header */}
       <div className="px-4 py-2 border-b border-neutral-700 flex justify-between items-center bg-neutral-800/60 rounded-t-lg">
-        <div className="flex items-center gap-2 bg-neutral-700/50 px-2 py-1 rounded cursor-pointer hover:bg-neutral-600/50 transition">
+        <div className="flex items-center gap-2 bg-neutral-700/50 px-2 py-1 rounded">
           <CheckSquare size={14} className="text-neutral-300" />
           <span className="font-medium text-xs">Multiple choice</span>
         </div>
 
-        <button className="text-neutral-400 hover:text-neutral-200 p-1 hover:bg-neutral-700 rounded">
-          <MoreHorizontal size={16} />
+        {/* DELETE QUESTION */}
+        <button
+          onClick={onDelete}
+          className="text-neutral-400 hover:text-red-400 p-1 rounded hover:bg-neutral-700"
+          aria-label="Delete question"
+        >
+          <X size={16} />
         </button>
       </div>
 
