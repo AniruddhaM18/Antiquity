@@ -4,6 +4,7 @@ import Image from "next/image";
 import logo from "../../public/Logoo.png";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Stack3Icon from "@/components/ui/stack-3-icon";
 
 export function Navbar() {
   const [hidden, setHidden] = useState(false);
@@ -48,24 +49,26 @@ export function Navbar() {
       >
         <div className="px-6 py-3 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div
-              className="
-                w-10 h-10 rounded-xl flex items-center justify-center">
-              <Image src={logo} alt="Logo" width={400} height={400} />
-            </div>
+          <div className="flex items-center gap-1">
+        <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
+        <Stack3Icon />
+        </div>
             <span className="text-2xl font-semibold text-slate-300 text-shadow-black/10 text-shadow-lg">
               Antiquity 
             </span>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
-            <Link href="/auth/signup" className="hidden md:block">
-              <button className="neo-neutral">Sign in</button>
-            </Link>
-            <button className="neo-blue">Get Started</button>
-          </div>
+        {/* Actions */}
+<div className="flex items-center gap-3">
+  <Link href="/auth/signin" className="hidden md:block">
+    <button className="neo-neutral">Sign in</button>
+  </Link>
+
+  <Link href="/auth/signup">
+    <button className="neo-blue">Get Started</button>
+  </Link>
+</div>
         </div>
       </div>
     </nav>

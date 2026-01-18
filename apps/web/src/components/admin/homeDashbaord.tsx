@@ -1,6 +1,8 @@
 "use client";
 
 import { Plus, Settings, BarChart3 } from "lucide-react";
+import { ButtonWithForm } from "./mcqContestCard";
+import { Button } from "@/components/ui/button";
 
 export default function HomeDashboard() {
   return (
@@ -25,24 +27,24 @@ export default function HomeDashboard() {
       </div>
 
       {/* Info / Stats Section */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
-          <p className="text-sm text-neutral-400">Total Users</p>
-          <p className="text-2xl font-semibold">1,284</p>
+          {/* <p className="text-sm text-neutral-400">Total Users</p>
+          <p className="text-2xl font-semibold">1,284</p> */}
+          <ButtonWithForm />
         </div>
 
         <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
-          <p className="text-sm text-neutral-400">Active Sessions</p>
-          <p className="text-2xl font-semibold">312</p>
+          <Button className="bg-neutral-300">DSA Contest</Button>
         </div>
 
-        <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
+        {/* <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
           <p className="text-sm text-neutral-400">Growth</p>
           <p className="text-2xl font-semibold flex items-center gap-1">
             <BarChart3 className="size-4" />
             +12%
           </p>
-        </div>
+        </div> */}
       </div>
 
       {/* Generic Content Area */}
