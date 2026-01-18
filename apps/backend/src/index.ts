@@ -1,45 +1,45 @@
 import dotenv from "dotenv";
-dotenv.config(); 
-console.log(process.env)
+dotenv.config();
+
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
+
 import contestRouter from "./routes/contestRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import participantRouter from "./routes/participantRouter.js";
 import liveContestRouter from "./routes/liveContestRoutes.js";
+
 const app = express();
-const PORT = process.env.PORT!;
-//cors before routes
+
+const PORT = Number(process.env.PORT) || 3001;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+if (!FRONTEND_URL) {
+  console.error("FRONTEND_URL is missing in .env");
+  process.exit(1); //check this
+}
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true, //allow cookies,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-}))
-
+  origin: FRONTEND_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
 
 app.use(express.json());
-app.use(cookieParser());     
+app.use(cookieParser());
 
-//check route
-app.post("/health", (req, res)=> {
-    res.json({
-        message: "Antiquity, ageing like a fine wine"
-    })
-})
+// health check
+app.get("/health", (req, res) => {
+  res.json({ message: "Antiquity, ageing like a fine wine" });
+});
 
-//auth routes
+// ROUTES
 app.use("/api/auth", authRouter);
-//contest rouetes bitch
-app.use("/api/", contestRouter);
-//participant routes
-app.use("/api", participantRouter);
+app.use("/api/contests", contestRouter);
+app.use("/api/participants", participantRouter);
+app.use("/api/live", liveContestRouter);
 
-//live contest & ressponses routes
-app.use("/api/", liveContestRouter);
-
-
-app.listen(PORT, ()=> {
-    console.log(`app listeing on port : ${PORT}`);
-})
+app.listen(PORT, () => {
+  console.log(`Backend listening on http://localhost:${PORT}`);
+});
