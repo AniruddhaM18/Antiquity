@@ -10,22 +10,15 @@ generator client {
   output   = "../generated/client"
 }
 
-// User & Roles
+// User Model - No role field
 model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
   password  String
-  role      ROLE     @default(user)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   contestMembers ContestMember[]
-}
-
-enum ROLE {
-  user
-  admin
 }
 
 // Contest Models
@@ -33,9 +26,8 @@ model Contest {
   id          String   @id @default(cuid())
   title       String
   description String
-  createdBy   String
+  createdBy   String   // References user ID who created the contest
   createdAt   DateTime @default(now())
-
   questions Question[]
   live      LiveContest?
   members   ContestMember[]
@@ -47,7 +39,6 @@ model LiveContest {
   currentIndex Int       @default(0)
   startedAt    DateTime  @default(now())
   endedAt      DateTime?
-
   contest   Contest        @relation(fields: [contestId], references: [id], onDelete: Cascade)
   responses LiveResponse[]
 }
@@ -59,7 +50,6 @@ model Question {
   options   String[]
   correct   Int
   points    Int      @default(10)
-
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
 }
 
@@ -71,9 +61,7 @@ model LiveResponse {
   selected      Int
   isCorrect     Boolean
   answeredAt    DateTime @default(now())
-
   liveContest LiveContest @relation(fields: [liveContestId], references: [id], onDelete: Cascade)
-
   @@unique([liveContestId, userId, questionIndex])
 }
 
@@ -82,10 +70,8 @@ model ContestMember {
   userId    String
   contestId String
   role      ContestRole
-
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
-
   @@unique([userId, contestId])
 }
 

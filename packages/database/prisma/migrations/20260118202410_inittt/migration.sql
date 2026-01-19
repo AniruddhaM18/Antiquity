@@ -1,8 +1,5 @@
 -- CreateEnum
-CREATE TYPE "ROLE" AS ENUM ('USER', 'ADMIN');
-
--- CreateEnum
-CREATE TYPE "ContestRole" AS ENUM ('HOST', 'PARTICIPANT');
+CREATE TYPE "ContestRole" AS ENUM ('host', 'participant');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -10,7 +7,6 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "ROLE" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -43,7 +39,7 @@ CREATE TABLE "LiveContest" (
 CREATE TABLE "Question" (
     "id" TEXT NOT NULL,
     "contestId" TEXT NOT NULL,
-    "text" TEXT NOT NULL,
+    "question" TEXT NOT NULL,
     "options" TEXT[],
     "correct" INTEGER NOT NULL,
     "points" INTEGER NOT NULL DEFAULT 10,
