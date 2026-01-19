@@ -6,18 +6,20 @@ import { prisma } from "@repo/database";
 export async function createContest(req: Request, res: Response) {
     try {
         const validaton = createContestSchema.safeParse(req.body);
+        console.log(validaton);
 
         if (!validaton.success) {
             return res.status(400).json({})
         }
         const { title, description } = validaton.data;
+        console.log(validaton.data);
 
         //create contest
         const contest = await prisma.contest.create({
             data: {
                 title,
                 description,
-                createdBy: req.user!.id, //Admins userID
+                createdBy: req.user!.id,
                 members: {
                     create: {
                         userId: req.user!.id,
@@ -29,7 +31,7 @@ export async function createContest(req: Request, res: Response) {
                 members: {
                     include: {
                         user: {
-                            select: {
+                              select: {
                                 id: true,
                                 name: true,
                                 email: true
@@ -39,6 +41,8 @@ export async function createContest(req: Request, res: Response) {
                 }
             }
         });
+
+        console.log(contest)
 
         return res.status(201).json({
             success: true,
@@ -53,7 +57,7 @@ export async function createContest(req: Request, res: Response) {
     }
 }
 
-// add questions to contest (Admin/Host only)
+// add questions to contest (Host only)
 export async function addQuestion(req: Request, res: Response) {
     try {
         const { id: contestId } = req.params;
@@ -68,19 +72,12 @@ export async function addQuestion(req: Request, res: Response) {
 
         const { questions } = validaton.data;
 
-        //check if contest exists and admin user is the host
-
+        //check if contest exists and user is the creator
         const contest = await prisma.contest.findUnique({
             where: {
                 id: contestId
             },
             include: {
-                members: {
-                    where: {
-                        userId: req.user!.id,
-                        role: "host"
-                    }
-                },
                 live: true //check if already live
             }
         });
@@ -92,10 +89,10 @@ export async function addQuestion(req: Request, res: Response) {
             })
         }
 
-        if (contest.members.length === 0) {
+        if (contest.createdBy !== req.user!.id) {
             return res.status(403).json({
                 success: false,
-                message: "Only the contest host can add questions"
+                message: "Only the contest creator can add questions"
             })
         }
 
@@ -140,7 +137,7 @@ export async function addQuestion(req: Request, res: Response) {
         return res.status(201).json({
             success: true,
             message: `${createdQuestions.count} questions added`,
-            questions: addQuestion
+            questions: allQuestions
         });
     } catch (err) {
         console.log("Error adding questions", err);
@@ -191,10 +188,8 @@ export async function getContest(req: Request, res: Response) {
             })
         }
 
-        //checking if user is host, if host - include answers
-        const isHost = contest.members.some(
-            (m) => m.userId === req.user?.id && m.role === "host"
-        );
+        //checking if user is the creator (host)
+        const isHost = contest.createdBy === req.user?.id;
 
         if (isHost) {
             //fetch questions with correct answers for host
@@ -272,23 +267,17 @@ export async function getAllContests(req: Request, res: Response) {
     }
 }
 
-//delete contest /contest/:id  -Admin/Host only route
+//delete contest /contest/:id - Creator/Host only route
 export async function deleteContest(req: Request, res: Response) {
     try {
         const { id } = req.params;
 
-        //check if user is host or admin
+        //check if contest exists and user is the creator
         const contest = await prisma.contest.findUnique({
             where: {
                 id
             },
             include: {
-                members: {
-                    where: {
-                        userId: req.user!.id,
-                        role: "host"
-                    }
-                },
                 live: true,
             }
         });
@@ -300,10 +289,10 @@ export async function deleteContest(req: Request, res: Response) {
             })
         };
 
-        if (contest.members.length === 0) {
-            return res.status(400).json({
+        if (contest.createdBy !== req.user!.id) {
+            return res.status(403).json({
                 success: false,
-                message: "only host can delete contest"
+                message: "only contest creator can delete contest"
             })
         }
 

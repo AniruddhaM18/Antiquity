@@ -1,16 +1,17 @@
+// contestRouter.ts
 import { Router } from "express";
 import { addQuestion, createContest, deleteContest, getAllContests, getContest } from "../controllers/contestController.js";
-import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+import { authMiddleware, requireContestHost } from "../middleware/authMiddleware.js";
 
 const contestRouter : Router = Router();
 
-//public but authenticated - participants/users
-contestRouter.get("/contests", authMiddleware, getAllContests); //view contests
-contestRouter.get("/contests/:id", authMiddleware, getContest); // view single cotnest 
+//public but authenticated - all users
+contestRouter.get("/getAll", authMiddleware, getAllContests); //view contests
+contestRouter.get("/get/:id", authMiddleware, getContest); // view single contest 
 
-//Admin/ Host only routes
-contestRouter.post("/contests", authMiddleware, requireRole, createContest); //admmin create contest
-contestRouter.post("/contests/:id/questions", authMiddleware, addQuestion); //host adds questions
-contestRouter.delete("/contests/:id", authMiddleware, deleteContest); ///host delets contest
+//Contest creator/host only routes
+contestRouter.post("/create", authMiddleware, createContest); //any user can create contest
+contestRouter.post("/add/:id/questions", authMiddleware, requireContestHost, addQuestion); //host adds questions
+contestRouter.delete("/delete/:id", authMiddleware, requireContestHost, deleteContest); //host deletes contest
 
 export default contestRouter;

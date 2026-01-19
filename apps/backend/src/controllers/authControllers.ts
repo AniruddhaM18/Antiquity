@@ -17,7 +17,7 @@ export async function signupController(req:Request, res:Response){
         })
     }
 
-    const { name, email, password, role } = signupData.data
+    const { name, email, password } = signupData.data
 
     const existing = await prisma.user.findUnique({
         where: {
@@ -39,12 +39,11 @@ export async function signupController(req:Request, res:Response){
         data: {
             name,
             email,
-            password: hashedPassword,
-            role: role
+            password: hashedPassword
         }
     });
 
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
         expiresIn: "7d"
     })
 
@@ -53,8 +52,7 @@ export async function signupController(req:Request, res:Response){
         user: {
             id: user.id,
             name: user.name,
-            email: user.email,
-            role: user.role
+            email: user.email
         }
     })
 
@@ -101,7 +99,7 @@ export async function signinController(req:Request, res:Response){
             })
         }
 
-        const token = jwt.sign({userId: user.id, email: user.email, role: user.role}, JWT_SECRET, {
+        const token = jwt.sign({userId: user.id, email: user.email}, JWT_SECRET, {
             expiresIn: "7d"
         })
 
@@ -111,9 +109,7 @@ export async function signinController(req:Request, res:Response){
             user: {
                 id: user.id,
                 name: user.name,
-                email: user.email,
-                role: user.role,
-
+                email: user.email
             }
         });
     }catch(err){
@@ -141,7 +137,7 @@ export async function getMe(req:Request, res:Response){
         select: {
             id: true,
             name: true,
-            role: true,
+            email: true
         }
     })
 

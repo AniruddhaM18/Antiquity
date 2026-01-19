@@ -6,7 +6,7 @@ export async function joinContest(req: Request, res: Response) {
         const { id: contestId } = req.params;
         const userId = req.user!.id
 
-        //check if user exists
+        //check if contest exists
         const contest = await prisma.contest.findUnique({
             where: {
                 id: contestId
@@ -23,7 +23,16 @@ export async function joinContest(req: Request, res: Response) {
                 message: "contest not found"
             })
         }
-        //check of already a member
+
+        // Prevent contest creator from joining as participant
+        if(contest.createdBy === userId) {
+            return res.status(403).json({
+                success: false,
+                message: "Contest creator cannot participate in their own contest"
+            })
+        }
+
+        //check if already a member
         if(contest.members.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -58,13 +67,14 @@ export async function joinContest(req: Request, res: Response) {
         });
         return res.status(201).json({
             success: true,
-            message: "successfully joined the contest"
+            message: "successfully joined the contest",
+            member
         })
     }catch(err){
         console.log(err);
         res.status(500).json({
             success: false,
-            messaage: "Internal server error"
+            message: "Internal server error"
         })
     }
 }
@@ -99,15 +109,15 @@ export async function leaveContest(req:Request, res:Response){
             })
         }
 
-        //check if user is host
-        if(contest.members[0].role === "host"){
+        //check if user is the contest creator
+        if(contest.createdBy === userId){
             return res.status(400).json({
                 success: false,
-                message: "HOST cannot leave the contest"
+                message: "Contest creator cannot leave their own contest"
             })
         }
 
-        //checking - conyest live (not ended)
+        //checking - contest live (not ended)
         if(contest.live && !contest.live.endedAt){
             return res.status(400).json({
                 success: false,
@@ -132,7 +142,7 @@ export async function leaveContest(req:Request, res:Response){
         console.log(err);
         res.status(500).json({
             success: false,
-            mesage: "Internal server error"
+            message: "Internal server error"
         })
     }
 }
@@ -143,14 +153,28 @@ export async function getMyContest(req: Request, res:Response){
         const userId  = req.user!.id;
         const { role, status } = req.query;
         const where: any = {
-            members: {
-                some: { userId }
-            }
+            OR: [
+                // Contests where user is creator
+                { createdBy: userId },
+                // Contests where user is a member
+                { members: { some: { userId } } }
+            ]
         }
 
         //filter by role if specified
-        if(role && (role === "HOST" || role === "PARTICIPANT")) {
-            where.members.some.role = role;
+        if(role && (role === "host" || role === "participant")) {
+            if(role === "host") {
+                // Only show contests where user is creator
+                where.AND = [{ createdBy: userId }];
+                delete where.OR;
+            } else {
+                // Only show contests where user is participant (not creator)
+                where.AND = [
+                    { createdBy: { not: userId } },
+                    { members: { some: { userId } } }
+                ];
+                delete where.OR;
+            }
         }
 
         //filter by status
@@ -197,9 +221,16 @@ export async function getMyContest(req: Request, res:Response){
             }
         })
 
+        // Add isCreator flag to each contest
+        const contestsWithRole = contests.map(contest => ({
+            ...contest,
+            isCreator: contest.createdBy === userId,
+            userRole: contest.createdBy === userId ? "host" : contest.members[0]?.role || null
+        }));
+
         return res.status(200).json({
             success: true,
-            contests
+            contests: contestsWithRole
         });
     }catch(err) {
         console.log(err);
@@ -252,7 +283,7 @@ export async function getLeaderboardController(req:Request, res:Response) {
             }
         });
         
-        //group by user and calculate scoree
+        //group by user and calculate score
         const scoreMap = new Map<string, {userId: string, score: number, correctCount:number }>();
         
         for (const response of responses) {

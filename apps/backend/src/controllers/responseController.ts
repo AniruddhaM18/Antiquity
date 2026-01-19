@@ -43,7 +43,15 @@ export async function submitAnswer(req:Request, res:Response){
         if(liveContest.contest.members.length === 0){
             return res.status(403).json({
                 success: false,
-                message: "forbidden, you arent a member"
+                message: "forbidden, you aren't a member"
+            })
+        }
+
+        //prevent contest creator from submitting answers
+        if(liveContest.contest.createdBy === userId){
+            return res.status(403).json({
+                success: false,
+                message: "forbidden, contest creator cannot participate in their own contest"
             })
         }
 
@@ -105,6 +113,7 @@ export async function submitAnswer(req:Request, res:Response){
     }catch(err){
         console.log(err);
         res.status(500).json({
+            success: false,
             message: "internal server error"
         })
     }
@@ -133,6 +142,7 @@ export async function getMyResponse(req:Request, res:Response){
     }catch(err){
         console.log(err);
         res.status(500).json({
+            success: false,
             message: "internal server error"
         })
     }

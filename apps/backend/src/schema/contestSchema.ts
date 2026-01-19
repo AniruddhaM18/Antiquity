@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const createContestSchema = z.object({
     title: z.string().min(4, "Title must me 4 characters"),

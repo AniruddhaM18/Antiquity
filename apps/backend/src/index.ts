@@ -40,6 +40,16 @@ app.use("/api/contests", contestRouter);
 app.use("/api/participants", participantRouter);
 app.use("/api/live", liveContestRouter);
 
+//global error handler - good practice
+// Optional: 404 handler
+app.use((req: express.Request, res: express.Response) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found"
+  });
+});
+
+
 app.listen(PORT, () => {
   console.log(`Backend listening on http://localhost:${PORT}`);
 });

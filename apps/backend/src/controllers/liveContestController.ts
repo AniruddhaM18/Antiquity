@@ -3,22 +3,16 @@ import { Request, Response } from "express";
 
 
 
-//start live contest - HOST OONLY
+//start live contest - HOST ONLY
 export async function startLiveContest(req: Request, res: Response) {
     try {
         const { id: contestId } = req.params;
         const userId = req.user!.id;
 
-        //check if user is host
+        //check if user is the creator
         const contest = await prisma.contest.findUnique({
             where: { id: contestId },
             include: {
-                members: {
-                    where: {
-                        userId,
-                        role: "host"
-                    }
-                },
                 questions: true,
                 live: true
             }
@@ -31,10 +25,10 @@ export async function startLiveContest(req: Request, res: Response) {
             })
         }
 
-        if (contest.members.length === 0) {
+        if (contest.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "only host can start contest"
+                message: "only contest creator can start contest"
             })
         }
 
@@ -61,19 +55,19 @@ export async function startLiveContest(req: Request, res: Response) {
 
         return res.status(201).json({
             success: true,
-            message: "contest already started",
+            message: "contest successfully started",
             liveContest
         })
     } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
-            message: "contest coulden't go live/ Iternal server error"
+            message: "contest couldn't go live/ Internal server error"
         })
     }
 }
 
-//move to nextQuestion - HOSTONLY
+//move to nextQuestion - HOST ONLY
 export async function moveToNextQuestion(req: Request, res: Response) {
 
     try {
@@ -87,13 +81,7 @@ export async function moveToNextQuestion(req: Request, res: Response) {
             include: {
                 contest: {
                     include: {
-                        questions: true,
-                        members: {
-                            where: {
-                                userId,
-                                role: "host"
-                            }
-                        }
+                        questions: true
                     }
                 }
             }
@@ -106,17 +94,17 @@ export async function moveToNextQuestion(req: Request, res: Response) {
             })
         }
 
-        if (liveContest.contest.members.length === 0) {
+        if (liveContest.contest.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "only host can control contest"
+                message: "only contest creator can control contest"
             })
         }
 
         if (liveContest.endedAt) {
             return res.status(400).json({
                 success: false,
-                message: "contest alreday ended"
+                message: "contest already ended"
             })
         }
 
@@ -146,12 +134,12 @@ export async function moveToNextQuestion(req: Request, res: Response) {
         console.log(err);
         res.status(500).json({
             success: false,
-            message: "Internal server error, coulde'nt update"
+            message: "Internal server error, couldn't update"
         })
     }
 }
 
-//end live contest - HOST onlu
+//end live contest - HOST ONLY
 export async function endLiveContest(req: Request, res: Response) {
     try {
         const { liveContestId } = req.params;
@@ -160,16 +148,7 @@ export async function endLiveContest(req: Request, res: Response) {
         const liveContest = await prisma.liveContest.findUnique({
             where: { id: liveContestId },
             include: {
-                contest: {
-                    include: {
-                        members: {
-                            where: {
-                                userId,
-                                role: "host"
-                            }
-                        }
-                    }
-                }
+                contest: true
             }
         });
 
@@ -180,10 +159,10 @@ export async function endLiveContest(req: Request, res: Response) {
             })
         }
 
-        if (liveContest.contest.members.length === 0) {
+        if (liveContest.contest.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "Fobidden/ only host can end contest"
+                message: "Forbidden/ only contest creator can end contest"
             })
         }
 
@@ -253,7 +232,15 @@ export async function getCurrentQuestion(req:Request, res:Response){
         if(liveContest.contest.members.length === 0) {
             return res.status(403).json({
                 success: false,
-                message: "forbiddden/ you are not a member to this contest"
+                message: "forbidden/ you are not a member of this contest"
+            })
+        }
+
+        // Prevent contest creator from participating
+        if(liveContest.contest.createdBy === userId) {
+            return res.status(403).json({
+                success: false,
+                message: "forbidden/ contest creator cannot participate in their own contest"
             })
         }
 
@@ -269,7 +256,7 @@ export async function getCurrentQuestion(req:Request, res:Response){
         if(!currentQuestion){
             return res.status(400).json({
                 success: false,
-                message: "no current queston available"
+                message: "no current question available"
             })
         }
 
@@ -297,12 +284,12 @@ export async function getCurrentQuestion(req:Request, res:Response){
         console.log(err);
         res.status(500).json({
             success: false,
-            message: "Internel server error"
+            message: "Internal server error"
         })
     }
 }
 
-//get live contest statussssssss
+//get live contest status
 export async function getLiveStatus(req:Request, res:Response){
     try{
         const { id: liveContestId } = req.params;
@@ -344,7 +331,7 @@ export async function getLiveStatus(req:Request, res:Response){
                 endedAt: liveContest.endedAt,
                 isActive: !liveContest.endedAt,
                 totalParticipants: liveContest.contest._count.members,
-                totatResponse: liveContest._count.responses
+                totalResponses: liveContest._count.responses
             }
         })
     }catch(err){

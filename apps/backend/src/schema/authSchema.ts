@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 export const signupSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(["admin", "user"]).optional().default("user"),
+    name: z.string(),
+    email: z.string().email(),
+    password: z.string().min(6)
+    // role field removed
 });
 
 export const signinSchema = z.object({
