@@ -15,44 +15,39 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { signup } from "@/src/actions/auth"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useState } from "react"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const [role, setRole] = useState<"user" | "admin">("user")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
     const form = new FormData(e.currentTarget)
 
-    const data = await signup({
-      name: form.get("name") as string,
-      email: form.get("email") as string,
-      password: form.get("password") as string,
-      role,
-    })
+    try {
+      const data = await signup({
+        name: form.get("name") as string,
+        email: form.get("email") as string,
+        password: form.get("password") as string,
+      })
 
-    localStorage.setItem("token", data.token)
-
-    if (data.user.role === "admin") {
-      router.push("/admin/home")
-    } else {
-      router.push("/user/home")
+      localStorage.setItem("token", data.token)
+      router.push("/home")
+    } catch (err: any) {
+      setError(err.message || "Failed to create account. Please try again.")
+      setIsLoading(false)
     }
   }
 
@@ -70,7 +65,6 @@ export function SignupForm({
           <form onSubmit={handleSubmit}>
             <FieldGroup>
 
-              {/* ✅ FIXED */}
               <Field>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input
@@ -79,6 +73,7 @@ export function SignupForm({
                   type="text"
                   placeholder="John Doe"
                   required
+                  disabled={isLoading}
                 />
               </Field>
 
@@ -90,40 +85,34 @@ export function SignupForm({
                   type="email"
                   placeholder="you@mail.com"
                   required
+                  disabled={isLoading}
                 />
               </Field>
 
               <Field>
-                <FieldLabel>Role</FieldLabel>
-                <Select value={role} onValueChange={v => setRole(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>
-                  Choose the type of account you want to create.
-                </FieldDescription>
-              </Field>
-
-               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   required
+                  disabled={isLoading}
                 />
                 <FieldDescription>
-                  Must be at least 8 characters long.
+                  Must be at least 6 characters long.
                 </FieldDescription>
               </Field>
 
+              {error && (
+                <div className="text-sm text-red-500 text-center">
+                  {error}
+                </div>
+              )}
+
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating Account..." : "Create Account"}
+                </Button>
                 <FieldDescription className="text-center">
                   Already have an account?{" "}
                   <Link

@@ -4,7 +4,7 @@ import Image from "next/image";
 import logo from "../../public/Logoo.png";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Stack3Icon from "@/components/ui/stack-3-icon";
+import LogoIcon from "@/components/ui/logo";
 
 export function Navbar() {
   const [hidden, setHidden] = useState(false);
@@ -51,7 +51,7 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center gap-1">
         <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
-        <Stack3Icon />
+        <LogoIcon />
         </div>
             <span className="text-2xl font-semibold text-slate-300 text-shadow-black/10 text-shadow-lg">
               Antiquity 

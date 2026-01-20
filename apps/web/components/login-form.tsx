@@ -17,29 +17,34 @@ import {
 import { Input } from "@/components/ui/input"
 import { signin } from "@/src/actions/auth"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
     const form = new FormData(e.currentTarget)
 
-    const data = await signin({
-      email: form.get("email") as string,
-      password: form.get("password") as string,
-    })
+    try {
+      const data = await signin({
+        email: form.get("email") as string,
+        password: form.get("password") as string,
+      })
 
-    localStorage.setItem("token", data.token)
-
-    if (data.user.role === "admin") {
-      router.push("/admin/home")
-    } else {
-      router.push("/user/home")
+      localStorage.setItem("token", data.token)
+      router.push("/home")
+    } catch (err: any) {
+      setError(err.message || "Failed to sign in. Please try again.")
+      setIsLoading(false)
     }
   }
 
@@ -54,7 +59,6 @@ export function LoginForm({
           <form onSubmit={handleSubmit}>
             <FieldGroup>
 
-              {/* ✅ FIXED */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -63,10 +67,10 @@ export function LoginForm({
                   type="email"
                   placeholder="you@mail.com"
                   required
+                  disabled={isLoading}
                 />
               </Field>
 
-              {/* ✅ FIXED */}
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
@@ -74,11 +78,20 @@ export function LoginForm({
                   name="password"
                   type="password"
                   required
+                  disabled={isLoading}
                 />
               </Field>
 
+              {error && (
+                <div className="text-sm text-red-500 text-center">
+                  {error}
+                </div>
+              )}
+
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Login"}
+                </Button>
 
                 <div className="text-center text-sm text-muted-foreground">
                   Don&apos;t have an account?{" "}

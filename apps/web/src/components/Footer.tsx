@@ -5,6 +5,7 @@ import Image from "next/image";
 import logo from "../../public/Logoo.png";
 import { FaSquareGithub, FaLinkedin, FaSquareXTwitter } from "react-icons/fa6";
 import { SiGmail } from "react-icons/si";
+import LogoIcon from "@/components/ui/logo";
 
 export default function Footer() {
   const [show, setShow] = useState(false);
@@ -25,7 +26,7 @@ export default function Footer() {
             className=" w-20 h-20 rounded-3xl flex items-center justify-center
               shadow-[inset_3px_3px_8px_rgba(0,0,0,0.9),inset_-3px_-3px_8px_rgba(255,255,255,0.06)]
             ">
-            <Image src={logo} alt="Logo" width={80} height={80} />
+            <LogoIcon size={80} />
           </div>
 
           <div className="flex gap-6 text-mithai/75">

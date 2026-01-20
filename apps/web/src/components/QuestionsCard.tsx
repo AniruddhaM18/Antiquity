@@ -1,5 +1,6 @@
 "use client"
-import React, { useState } from "react"
+
+import React, { useState, useEffect } from "react"
 import {
   CheckSquare,
   Trash2,
@@ -10,21 +11,25 @@ import {
   X,
 } from "lucide-react"
 
+type QuestionValue = {
+  text: string
+  options: string[]
+  correct: number
+  points: number
+}
+
 type QuestionsCardProps = {
   questionNo: number
-  value?: {
-    text: string
-    options: string[]
-    correct: number
-    points: number
-  }
-  onChange?: (data: {
-    text: string
-    options: string[]
-    correct: number
-    points: number
-  }) => void
+  value?: QuestionValue
+  onChange?: (data: QuestionValue) => void
   onDelete?: () => void
+}
+
+const EMPTY_QUESTION: QuestionValue = {
+  text: "",
+  options: ["", "", "", ""],
+  correct: 0,
+  points: 10,
 }
 
 export function QuestionsCard({
@@ -33,14 +38,24 @@ export function QuestionsCard({
   onChange,
   onDelete,
 }: QuestionsCardProps) {
+  // ✅ SAFE INITIALIZATION
   const [text, setText] = useState(value?.text ?? "")
   const [options, setOptions] = useState<string[]>(
-    value?.options ?? ["", ""]
+    value?.options ?? EMPTY_QUESTION.options
   )
   const [correct, setCorrect] = useState<number>(value?.correct ?? 0)
   const [points, setPoints] = useState<number>(value?.points ?? 10)
 
-  function emitChange(next?: Partial<typeof value>) {
+  // 🔥 SYNC WHEN VALUE CHANGES (CRITICAL)
+  useEffect(() => {
+    if (!value) return
+    setText(value.text)
+    setOptions(value.options)
+    setCorrect(value.correct)
+    setPoints(value.points)
+  }, [value])
+
+  function emitChange(next: Partial<QuestionValue>) {
     onChange?.({
       text,
       options,
@@ -66,14 +81,17 @@ export function QuestionsCard({
 
   function removeOption(index: number) {
     if (options.length <= 2) return
+
     const next = options.filter((_, i) => i !== index)
+    const nextCorrect = correct >= next.length ? 0 : correct
+
     setOptions(next)
-    if (correct >= next.length) setCorrect(0)
-    emitChange({ options: next, correct: 0 })
+    setCorrect(nextCorrect)
+    emitChange({ options: next, correct: nextCorrect })
   }
 
   return (
-    <div className="w-full max-w-4xl min-h-[7.75rem] bg-neutral-900 rounded-lg border border-neutral-700 shadow-xl text-sm text-neutral-200 m-10">
+    <div className="w-full max-w-4xl bg-neutral-900 rounded-lg border border-neutral-700 shadow-xl text-sm text-neutral-200">
       {/* Header */}
       <div className="px-4 py-2 border-b border-neutral-700 flex justify-between items-center bg-neutral-800/60 rounded-t-lg">
         <div className="flex items-center gap-2 bg-neutral-700/50 px-2 py-1 rounded">
@@ -81,11 +99,9 @@ export function QuestionsCard({
           <span className="font-medium text-xs">Multiple choice</span>
         </div>
 
-        {/* DELETE QUESTION */}
         <button
           onClick={onDelete}
           className="text-neutral-400 hover:text-red-400 p-1 rounded hover:bg-neutral-700"
-          aria-label="Delete question"
         >
           <X size={16} />
         </button>
@@ -186,7 +202,10 @@ export function QuestionsCard({
             />
             <div className="px-2 flex items-center text-[10px] text-neutral-400 border-l border-neutral-700">
               Points
-              <Hexagon size={10} className="text-amber-500 fill-amber-500 ml-1" />
+              <Hexagon
+                size={10}
+                className="text-amber-500 fill-amber-500 ml-1"
+              />
             </div>
           </div>
         </div>

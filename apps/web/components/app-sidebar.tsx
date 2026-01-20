@@ -1,8 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import logo from "../public/Loom.png";
-
 
 import {
   Sidebar,
@@ -17,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { Home, Trophy, Settings } from "lucide-react";
+import LogoIcon from "./ui/logo";
 
 export function AppSidebar() {
   return (
@@ -32,16 +30,10 @@ export function AppSidebar() {
       group-data-[collapsible=icon]:justify-center
     "
   >
-    <div className="flex items-center gap-3">
-      <div className="gradient-button w-9 h-9 rounded-sm flex items-center justify-center p-1 shrink-0">
-        <Image
-          src={logo}
-          alt="Logo"
-          width={256}
-          height={256}
-          priority
-        />
-      </div>
+    <div className="flex items-center gap-1">
+        <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
+        <LogoIcon />
+        </div>
 
       <span className="text-xl font-semibold text-slate-300 whitespace-nowrap group-data-[collapsible=icon]:hidden">
         Antiquity
@@ -49,7 +41,6 @@ export function AppSidebar() {
     </div>
   </div>
 </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
@@ -78,6 +69,16 @@ export function AppSidebar() {
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+  <SidebarMenuButton asChild>
+    <a href="/dashboard/quizzes">
+      <Trophy className="size-4 shrink-0" />
+      <span className="group-data-[collapsible=icon]:hidden">
+        My Quizzes
+      </span>
+    </a>
+  </SidebarMenuButton>
+</SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
