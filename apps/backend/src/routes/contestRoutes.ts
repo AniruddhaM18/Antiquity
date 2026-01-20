@@ -14,4 +14,5 @@ contestRouter.post("/create", authMiddleware, createContest); //any user can cre
 contestRouter.post("/add/:id/questions", authMiddleware, requireContestHost, addQuestion); //host adds questions
 contestRouter.delete("/delete/:id", authMiddleware, requireContestHost, deleteContest); //host deletes contest
 
+
 export default contestRouter;

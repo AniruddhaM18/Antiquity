@@ -3,13 +3,20 @@ import { Request, Response } from "express";
 
 export async function joinContest(req: Request, res: Response) {
     try {
-        const { id: contestId } = req.params;
-        const userId = req.user!.id
+        const { joinCode } = req.body;
+        const userId = req.user!.id;
+
+        if (!joinCode || typeof joinCode !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: "Join code is required"
+            });
+        }
 
         //check if contest exists
         const contest = await prisma.contest.findUnique({
             where: {
-                id: contestId
+                joinCode: joinCode.toUpperCase()
             },
             include: {
                 live: true,
@@ -18,9 +25,11 @@ export async function joinContest(req: Request, res: Response) {
                 }
             }
         });
+        
         if(!contest){
             return res.status(404).json({
-                message: "contest not found"
+                success: false,
+                message: "Contest not found with this join code"
             })
         }
 
@@ -52,7 +61,7 @@ export async function joinContest(req: Request, res: Response) {
         const member = await prisma.contestMember.create({
             data: {
                 userId,
-                contestId,
+                contestId: contest.id,
                 role: "participant"
             },
             include: {
@@ -65,10 +74,16 @@ export async function joinContest(req: Request, res: Response) {
                 }
             }
         });
+        
         return res.status(201).json({
             success: true,
             message: "successfully joined the contest",
-            member
+            member,
+            contest: {
+                id: contest.id,
+                title: contest.title,
+                description: contest.description
+            }
         })
     }catch(err){
         console.log(err);

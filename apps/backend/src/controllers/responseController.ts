@@ -64,20 +64,30 @@ export async function submitAnswer(req:Request, res:Response){
 
         const currentQuestion = liveContest.contest.questions[liveContest.currentIndex];
 
-        if(!currentQuestion){
-            return res.status(400).json({
-                success: false,
-                message: "no current question"
-            })
-        }
+if(!currentQuestion){
+    return res.status(400).json({
+        success: false,
+        message: "no current question"
+    })
+}
 
-        //validate selected question
-        if(selected >= currentQuestion.options.length){
-            return res.status(400).json({
-                success: false,
-                message: "Invalid option selected"
-            })
-        }
+const options = currentQuestion.options;
+
+if (!Array.isArray(options)) {
+    return res.status(500).json({
+        success: false,
+        message: "Invalid question options format"
+    });
+}
+
+// validate selected option
+if (selected >= options.length) {
+    return res.status(400).json({
+        success: false,
+        message: "Invalid option selected"
+    })
+}
+
 
         const isCorrect = selected === currentQuestion.correct;
 

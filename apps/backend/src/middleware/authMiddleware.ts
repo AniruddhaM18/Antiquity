@@ -37,41 +37,53 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 }
 
 // Resource-based authorization - check if user is contest host
-export async function requireContestHost(req: Request, res: Response, next: NextFunction) {
-  const contestId = req.params.contestId || req.body.contestId;
+export async function requireContestHost(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const contestId = req.params.id || req.body.contestId;
   const userId = req.user?.id;
 
   if (!userId) {
     return res.status(401).json({
       success: false,
-      message: "Unauthorized"
+      message: "Unauthorized",
+    });
+  }
+
+  if (!contestId) {
+    return res.status(400).json({
+      success: false,
+      message: "Contest ID missing",
     });
   }
 
   try {
     const contest = await prisma.contest.findUnique({
-      where: { id: contestId }
+      where: { id: contestId },
     });
 
     if (!contest) {
       return res.status(404).json({
         success: false,
-        message: "Contest not found"
+        message: "Contest not found",
       });
     }
 
     if (contest.createdBy !== userId) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: Only contest creator can perform this action"
+        message: "Forbidden: Only contest creator can perform this action",
       });
     }
 
     next();
   } catch (error) {
+    console.error("requireContestHost error 👉", error);
     return res.status(500).json({
       success: false,
-      message: "Error checking permissions"
+      message: "Error checking permissions",
     });
   }
 }
