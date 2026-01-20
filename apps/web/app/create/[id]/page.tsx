@@ -15,7 +15,8 @@ type Question = {
 
 export default function CreatePage() {
   const router = useRouter()
-  const { id: contestId } = useParams<{ id: string }>()
+  const params = useParams()
+  const contestId = params?.id as string
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0)
@@ -25,6 +26,9 @@ export default function CreatePage() {
   const [loadingContest, setLoadingContest] = useState(true)
   const [error, setError] = useState("")
 
+  // ============================
+  // FETCH CONTEST
+  // ============================
   useEffect(() => {
     if (!contestId) return
 
@@ -39,36 +43,36 @@ export default function CreatePage() {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api"
-        
+        const apiUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL ||
+          "http://localhost:3001/api"
+
         const { data } = await axios.get(
           `${apiUrl}/contests/get/${contestId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
           }
         )
 
         if (data.success) {
           setTitle(data.contest.title)
-          setDescription(data.contest.description)
-          
-          // If questions already exist, load them
-          if (data.contest.questions && data.contest.questions.length > 0) {
+          setDescription(data.contest.description ?? "")
+
+          if (data.contest.questions?.length) {
             const loadedQuestions = data.contest.questions.map((q: any) => ({
               text: q.question,
               options: q.options,
-              correct: q.correct || 0,
-              points: q.points || 10,
+              correct: q.correct ?? 0,
+              points: q.points ?? 10,
             }))
             setQuestions(loadedQuestions)
           }
         }
       } catch (err: any) {
         console.error("Failed to load contest:", err)
-        
+
         if (err.response?.status === 404) {
           setError("Contest not found")
         } else if (err.response?.status === 403) {
@@ -76,7 +80,7 @@ export default function CreatePage() {
         } else {
           setError("Failed to load contest")
         }
-        
+
         setTimeout(() => {
           router.push("/home")
         }, 2000)
@@ -88,6 +92,9 @@ export default function CreatePage() {
     fetchContest()
   }, [contestId, router])
 
+  // ============================
+  // QUESTION OPERATIONS
+  // ============================
   function addQuestion() {
     const newQuestion: Question = {
       text: "",
@@ -97,7 +104,7 @@ export default function CreatePage() {
     }
 
     setQuestions((prev) => [...prev, newQuestion])
-    setCurrentQuestionIndex(questions.length) // Navigate to the new question
+    setCurrentQuestionIndex(questions.length)
   }
 
   function updateQuestion(index: number, data: Question) {
@@ -111,7 +118,6 @@ export default function CreatePage() {
   function deleteQuestion(index: number) {
     setQuestions((prev) => prev.filter((_, i) => i !== index))
 
-    // Adjust current index after deletion
     if (currentQuestionIndex >= questions.length - 1) {
       setCurrentQuestionIndex(Math.max(0, questions.length - 2))
     }
@@ -133,47 +139,71 @@ export default function CreatePage() {
     }
   }
 
+  // ============================
+  // SAVE QUIZ (ADD QUESTIONS)
+  // ============================
   async function saveQuestions() {
-    const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token")
 
-    if (!token) {
-      alert("You are not logged in")
-      return
-    }
-
-    // Validate questions
-    const invalidQuestions = questions.filter(
-      (q) => !q.text || q.options.some((opt) => !opt)
-    )
-
-    if (invalidQuestions.length > 0) {
-      alert("Please fill in all question fields before saving")
-      return
-    }
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001/api"
-      
-      const { data } = await axios.post(
-        `${apiUrl}/contests/add/${contestId}/questions`,
-        { questions },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-
-      if (data.success) {
-        alert("Questions saved successfully!")
-      }
-    } catch (err: any) {
-      console.error("Failed to save questions:", err)
-      alert(err.response?.data?.message || "Failed to save questions")
-    }
+  if (!token) {
+    alert("You are not logged in")
+    return
   }
 
+  // frontend validation
+  const invalid = questions.some(
+    (q) =>
+      !q.text.trim() ||
+      q.options.length < 2 ||
+      q.options.some((opt) => !opt.trim()) ||
+      q.correct < 0 ||
+      q.correct >= q.options.length
+  )
+
+  if (invalid) {
+    alert("Please fill all questions correctly before saving")
+    return
+  }
+
+  try {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "http://localhost:3001/api"
+
+    // ✅ PURE JSON PAYLOAD
+    const payload = {
+      questions: questions.map((q) => ({
+        text: q.text,
+        options: q.options,     // ✅ ARRAY (JSON)
+        correct: q.correct,
+        points: q.points ?? 10,
+      })),
+    }
+
+    const { data } = await axios.post(
+      `${apiUrl}/contests/add/${contestId}/questions`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    )
+
+    if (data.success) {
+      alert("Quiz saved successfully")
+    }
+  } catch (err: any) {
+    console.error("Failed to save quiz:", err)
+    alert(err.response?.data?.message || "Failed to save quiz")
+  }
+}
+
+
+  // ============================
+  // UI
+  // ============================
   return (
     <div className="flex h-full bg-neutral-950 text-neutral-200">
       {/* SIDEBAR */}
@@ -198,12 +228,15 @@ export default function CreatePage() {
             onClick={saveQuestions}
             className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition"
           >
-            Save Questions
+            Save Quiz
           </button>
         )}
 
         <div className="pt-2 border-t border-neutral-800">
-          <p className="text-xs text-neutral-500 mb-2 px-2">Questions ({questions.length})</p>
+          <p className="text-xs text-neutral-500 mb-2 px-2">
+            Questions ({questions.length})
+          </p>
+
           <div className="space-y-1 max-h-[60vh] overflow-y-auto">
             {questions.map((q, i) => (
               <button
@@ -229,17 +262,15 @@ export default function CreatePage() {
 
       {/* MAIN */}
       <main className="flex-1 flex flex-col bg-neutral-900/80 overflow-hidden">
-        {/* CONTEST HEADER */}
-        <div className="border-b border-neutral-800 px-6 py-4 flex-shrink-0">
+        {/* HEADER */}
+        <div className="border-b border-neutral-800 px-6 py-4">
           {loadingContest ? (
             <div className="text-neutral-500">Loading contest...</div>
           ) : error ? (
             <div className="text-red-500">{error}</div>
           ) : (
             <>
-              <h1 className="text-2xl font-semibold text-neutral-100">
-                {title}
-              </h1>
+              <h1 className="text-2xl font-semibold">{title}</h1>
               {description && (
                 <p className="text-sm text-neutral-400 mt-1">
                   {description}
@@ -249,40 +280,34 @@ export default function CreatePage() {
           )}
         </div>
 
-        {/* QUESTION DISPLAY AREA */}
-        <div className="flex-1 flex items-center justify-center px-6 overflow-hidden">
+        {/* CONTENT */}
+        <div className="flex-1 flex items-center justify-center px-6">
           {questions.length === 0 && !loadingContest ? (
             <div className="text-center text-neutral-500">
               <p className="text-lg mb-2">No questions yet</p>
-              <p className="text-sm">Click "Add Question" to get started</p>
+              <p className="text-sm">
+                Click "Add Question" to get started
+              </p>
             </div>
-          ) : questions.length > 0 ? (
-            <div className="w-full max-w-4xl h-full flex items-center py-4">
-              {questions.map((question, index) => (
-                <div
-                  key={index}
-                  className="w-full"
-                  style={{ display: currentQuestionIndex === index ? 'block' : 'none' }}
-                >
-                  <QuestionsCard
-                    questionNo={index + 1}
-                    value={question}
-                    onChange={(data) => updateQuestion(index, data)}
-                    onDelete={() => deleteQuestion(index)}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          ) : (
+            <QuestionsCard
+              questionNo={currentQuestionIndex + 1}
+              value={questions[currentQuestionIndex]}
+              onChange={(data) =>
+                updateQuestion(currentQuestionIndex, data)
+              }
+              onDelete={() => deleteQuestion(currentQuestionIndex)}
+            />
+          )}
         </div>
 
-        {/* NAVIGATION FOOTER */}
+        {/* FOOTER */}
         {questions.length > 0 && (
-          <div className="border-t border-neutral-800 p-4 flex items-center justify-between flex-shrink-0">
+          <div className="border-t border-neutral-800 p-4 flex items-center justify-between">
             <button
               onClick={previousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded border border-neutral-700 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex items-center gap-2 px-4 py-2 rounded border border-neutral-700 hover:bg-neutral-800 disabled:opacity-50"
             >
               <ChevronLeft size={16} />
               Previous
@@ -295,7 +320,7 @@ export default function CreatePage() {
             <button
               onClick={nextQuestion}
               disabled={currentQuestionIndex === questions.length - 1}
-              className="flex items-center gap-2 px-4 py-2 rounded border border-neutral-700 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex items-center gap-2 px-4 py-2 rounded border border-neutral-700 hover:bg-neutral-800 disabled:opacity-50"
             >
               Next
               <ChevronRight size={16} />

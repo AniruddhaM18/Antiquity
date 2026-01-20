@@ -5,8 +5,6 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PanelLeft } from "lucide-react";
-import { QuestionsCard } from "@/src/components/QuestionsCard";
-import Home from "./homeDashbaord";
 import HomeDashboard from "./homeDashbaord";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
