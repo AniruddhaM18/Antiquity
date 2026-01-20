@@ -26,7 +26,8 @@ model Contest {
   id          String   @id @default(cuid())
   title       String
   description String
-  createdBy   String   // References user ID who created the contest
+  createdBy   String
+  joinCode    String   @unique // Added for join contest
   createdAt   DateTime @default(now())
   questions Question[]
   live      LiveContest?
@@ -47,7 +48,7 @@ model Question {
   id        String   @id @default(cuid())
   contestId String
   question  String
-  options   String[]
+  options   Json
   correct   Int
   points    Int      @default(10)
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
