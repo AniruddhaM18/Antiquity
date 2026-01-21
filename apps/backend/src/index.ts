@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import http from "http";
+import { SocketServer } from "./socketServer/socketServer.js";
+
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -49,7 +52,19 @@ app.use((req: express.Request, res: express.Response) => {
   });
 });
 
+//for both http and wsss
+const server = http.createServer(app);
 
-app.listen(PORT, () => {
-  console.log(`Backend listening on http://localhost:${PORT}`);
-});
+const socketServer = new SocketServer(server);
+app.set("socketServer", socketServer);
+
+
+//new way for both is now =
+server.listen(PORT, ()=> {
+    console.log(`Backend listening on @:${PORT}`);
+
+})
+
+// app.listen(PORT, () => {
+//   console.log(`Backend listening on http://localhost:${PORT}`);
+// });
