@@ -3,13 +3,13 @@ import { Request, Response } from "express";
 
 
 //submit answer 
-export async function submitAnswer(req:Request, res:Response){
-    try{
+export async function submitAnswer(req: Request, res: Response) {
+    try {
         const { liveContestId } = req.params;
         const { selected } = req.body;
         const userId = req.user!.id;
 
-        if(typeof selected !== "number" || selected < 0){
+        if (typeof selected !== "number" || selected < 0) {
             return res.status(400).json({
                 success: false,
                 message: "invalid answer selection"
@@ -32,7 +32,7 @@ export async function submitAnswer(req:Request, res:Response){
             }
         });
 
-        if(!liveContest){
+        if (!liveContest) {
             return res.status(404).json({
                 success: false,
                 message: "live contest not found"
@@ -40,7 +40,7 @@ export async function submitAnswer(req:Request, res:Response){
         }
 
         //check if user is a member
-        if(liveContest.contest.members.length === 0){
+        if (liveContest.contest.members.length === 0) {
             return res.status(403).json({
                 success: false,
                 message: "forbidden, you aren't a member"
@@ -48,14 +48,14 @@ export async function submitAnswer(req:Request, res:Response){
         }
 
         //prevent contest creator from submitting answers
-        if(liveContest.contest.createdBy === userId){
+        if (liveContest.contest.createdBy === userId) {
             return res.status(403).json({
                 success: false,
                 message: "forbidden, contest creator cannot participate in their own contest"
             })
         }
 
-        if(liveContest.endedAt){
+        if (liveContest.endedAt) {
             return res.status(400).json({
                 success: false,
                 message: "contest already ended"
@@ -64,36 +64,36 @@ export async function submitAnswer(req:Request, res:Response){
 
         const currentQuestion = liveContest.contest.questions[liveContest.currentIndex];
 
-if(!currentQuestion){
-    return res.status(400).json({
-        success: false,
-        message: "no current question"
-    })
-}
+        if (!currentQuestion) {
+            return res.status(400).json({
+                success: false,
+                message: "no current question"
+            })
+        }
 
-const options = currentQuestion.options;
+        const options = currentQuestion.options;
 
-if (!Array.isArray(options)) {
-    return res.status(500).json({
-        success: false,
-        message: "Invalid question options format"
-    });
-}
+        if (!Array.isArray(options)) {
+            return res.status(500).json({
+                success: false,
+                message: "Invalid question options format"
+            });
+        }
 
-// validate selected option
-if (selected >= options.length) {
-    return res.status(400).json({
-        success: false,
-        message: "Invalid option selected"
-    })
-}
+        // validate selected option
+        if (selected >= options.length) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid option selected"
+            })
+        }
 
 
         const isCorrect = selected === currentQuestion.correct;
 
         // Create or update response (using upsert to handle re-submissions)
         const response = await prisma.liveResponse.upsert({
-            where: { 
+            where: {
                 liveContestId_userId_questionIndex: {
                     liveContestId,
                     userId,
@@ -114,13 +114,25 @@ if (selected >= options.length) {
             }
         });
 
+        //socket--
+        const socketServer = req.app.get("socketServer");
+
+        socketServer.broadcast(
+            liveContestId,
+            "leaderboard:update",
+            {
+                questionIndex: liveContest.currentIndex,
+                userId
+            }
+        );
+
         return res.status(201).json({
             success: true,
             message: "answer successfully submitted",
             isCorrect,
             response
         });
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
@@ -130,13 +142,13 @@ if (selected >= options.length) {
 }
 
 //get response for contest
-export async function getMyResponse(req:Request, res:Response){
-    try{
+export async function getMyResponse(req: Request, res: Response) {
+    try {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
         const responses = await prisma.liveResponse.findMany({
-            where:{ 
+            where: {
                 liveContestId,
                 userId
             },
@@ -146,10 +158,10 @@ export async function getMyResponse(req:Request, res:Response){
         });
 
         return res.status(200).json({
-            success:true,
+            success: true,
             responses
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,

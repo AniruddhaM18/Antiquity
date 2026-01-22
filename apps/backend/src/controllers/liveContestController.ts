@@ -1,8 +1,6 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
 
-
-
 //start live contest - HOST ONLY
 export async function startLiveContest(req: Request, res: Response) {
     try {
@@ -51,7 +49,19 @@ export async function startLiveContest(req: Request, res: Response) {
                 contestId,
                 currentIndex: 0
             }
-        })
+        });
+
+        //adding socket - 
+        const socketServer = req.app.get("socketServer");
+
+        socketServer.broadcast(
+            liveContest.id,
+            "contest:started",
+            {
+                liveContestId: liveContest.id,
+                contestId
+            }
+        )
 
         return res.status(201).json({
             success: true,
@@ -125,6 +135,17 @@ export async function moveToNextQuestion(req: Request, res: Response) {
             }
         });
 
+        //socket -
+        const socketServer = req.app.get("socketServer");
+
+        socketServer.broadcast(
+            liveContestId,
+            "question:changed",
+            {
+                currentIndex: updated.currentIndex
+            }
+        );
+
         return res.status(200).json({
             success: true,
             message: "moved to next question",
@@ -183,6 +204,17 @@ export async function endLiveContest(req: Request, res: Response) {
             }
         });
 
+        const socketServer = req.app.get("socketServer");
+
+        socketServer.broadcast(
+            liveContestId,
+            "contest:ended",
+            {
+                endedAt: ended.endedAt
+            }
+        );
+
+
         res.status(200).json({
             success: true,
             message: "contest successfully ended",
@@ -201,8 +233,8 @@ export async function endLiveContest(req: Request, res: Response) {
 /////////////////////////FOR PARTICIPANTS ::::::::::::::
 
 //get current question participant
-export async function getCurrentQuestion(req:Request, res:Response){
-    try{
+export async function getCurrentQuestion(req: Request, res: Response) {
+    try {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
@@ -210,7 +242,7 @@ export async function getCurrentQuestion(req:Request, res:Response){
             where: { id: liveContestId },
             include: {
                 contest: {
-                    include:{
+                    include: {
                         questions: {
                             orderBy: { id: "asc" }
                         },
@@ -222,14 +254,14 @@ export async function getCurrentQuestion(req:Request, res:Response){
             }
         });
 
-        if(!liveContest){
+        if (!liveContest) {
             return res.status(404).json({
                 success: false,
                 message: "contest not found"
             })
         }
 
-        if(liveContest.contest.members.length === 0) {
+        if (liveContest.contest.members.length === 0) {
             return res.status(403).json({
                 success: false,
                 message: "forbidden/ you are not a member of this contest"
@@ -237,14 +269,14 @@ export async function getCurrentQuestion(req:Request, res:Response){
         }
 
         // Prevent contest creator from participating
-        if(liveContest.contest.createdBy === userId) {
+        if (liveContest.contest.createdBy === userId) {
             return res.status(403).json({
                 success: false,
                 message: "forbidden/ contest creator cannot participate in their own contest"
             })
         }
 
-        if(liveContest.endedAt){
+        if (liveContest.endedAt) {
             return res.status(400).json({
                 success: false,
                 message: "contest has ended"
@@ -252,8 +284,8 @@ export async function getCurrentQuestion(req:Request, res:Response){
         }
 
         const currentQuestion = liveContest.contest.questions[liveContest.currentIndex];
-        
-        if(!currentQuestion){
+
+        if (!currentQuestion) {
             return res.status(400).json({
                 success: false,
                 message: "no current question available"
@@ -272,7 +304,7 @@ export async function getCurrentQuestion(req:Request, res:Response){
         })
 
         //do not send correct answers to users
-        const {correct, ...questionWithoutAnswer } = currentQuestion;
+        const { correct, ...questionWithoutAnswer } = currentQuestion;
         return res.status(200).json({
             success: true,
             question: questionWithoutAnswer,
@@ -280,7 +312,7 @@ export async function getCurrentQuestion(req:Request, res:Response){
             totalQuestions: liveContest.contest.questions.length,
             alreadyAnswered: !!existingResponse
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
@@ -290,13 +322,13 @@ export async function getCurrentQuestion(req:Request, res:Response){
 }
 
 //get live contest status
-export async function getLiveStatus(req:Request, res:Response){
-    try{
+export async function getLiveStatus(req: Request, res: Response) {
+    try {
         const { id: liveContestId } = req.params;
         const userId = req.user!.id;
 
         const liveContest = await prisma.liveContest.findUnique({
-            where: { id: liveContestId }, 
+            where: { id: liveContestId },
             include: {
                 contest: {
                     include: {
@@ -306,14 +338,14 @@ export async function getLiveStatus(req:Request, res:Response){
                         }
                     }
                 },
-                _count:{
+                _count: {
                     select: {
                         responses: true
                     }
                 }
             }
         });
-        if(!liveContest){
+        if (!liveContest) {
             return res.status(404).json({
                 success: false,
                 message: "contest not found"
@@ -334,7 +366,7 @@ export async function getLiveStatus(req:Request, res:Response){
                 totalResponses: liveContest._count.responses
             }
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,

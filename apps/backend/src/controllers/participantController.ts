@@ -25,8 +25,8 @@ export async function joinContest(req: Request, res: Response) {
                 }
             }
         });
-        
-        if(!contest){
+
+        if (!contest) {
             return res.status(404).json({
                 success: false,
                 message: "Contest not found with this join code"
@@ -34,7 +34,7 @@ export async function joinContest(req: Request, res: Response) {
         }
 
         // Prevent contest creator from joining as participant
-        if(contest.createdBy === userId) {
+        if (contest.createdBy === userId) {
             return res.status(403).json({
                 success: false,
                 message: "Contest creator cannot participate in their own contest"
@@ -42,7 +42,7 @@ export async function joinContest(req: Request, res: Response) {
         }
 
         //check if already a member
-        if(contest.members.length > 0) {
+        if (contest.members.length > 0) {
             return res.status(400).json({
                 success: false,
                 message: "You are already a member of this contest"
@@ -50,7 +50,7 @@ export async function joinContest(req: Request, res: Response) {
         }
 
         //check if contest has ended
-        if(contest.live?.endedAt){
+        if (contest.live?.endedAt) {
             return res.status(400).json({
                 success: false,
                 message: "Contest already ended"
@@ -74,7 +74,13 @@ export async function joinContest(req: Request, res: Response) {
                 }
             }
         });
-        
+
+        console.log("ADDING CONTEST MEMBER", {
+            userId,
+            contestId: contest.id
+        });
+
+
         return res.status(201).json({
             success: true,
             message: "successfully joined the contest",
@@ -85,7 +91,7 @@ export async function joinContest(req: Request, res: Response) {
                 description: contest.description
             }
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
@@ -95,11 +101,11 @@ export async function joinContest(req: Request, res: Response) {
 }
 
 //participant leaving, (not when contest started or live)
-export async function leaveContest(req:Request, res:Response){
-    try{
+export async function leaveContest(req: Request, res: Response) {
+    try {
         const { id: contestId } = req.params;
         const userId = req.user!.id;
-        
+
         const contest = await prisma.contest.findUnique({
             where: { id: contestId },
             include: {
@@ -110,14 +116,14 @@ export async function leaveContest(req:Request, res:Response){
             }
         });
 
-        if(!contest){
+        if (!contest) {
             return res.status(404).json({
                 success: false,
                 message: "contest not found"
             })
         }
 
-        if(contest.members.length === 0) {
+        if (contest.members.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: "you are not a member of this contest"
@@ -125,7 +131,7 @@ export async function leaveContest(req:Request, res:Response){
         }
 
         //check if user is the contest creator
-        if(contest.createdBy === userId){
+        if (contest.createdBy === userId) {
             return res.status(400).json({
                 success: false,
                 message: "Contest creator cannot leave their own contest"
@@ -133,7 +139,7 @@ export async function leaveContest(req:Request, res:Response){
         }
 
         //checking - contest live (not ended)
-        if(contest.live && !contest.live.endedAt){
+        if (contest.live && !contest.live.endedAt) {
             return res.status(400).json({
                 success: false,
                 message: "cannot leave from an ongoing contest"
@@ -148,12 +154,12 @@ export async function leaveContest(req:Request, res:Response){
                 }
             }
         });
-        
+
         return res.status(200).json({
             success: true,
             message: "darpok ho bhai aap, you left contest"
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
@@ -163,9 +169,9 @@ export async function leaveContest(req:Request, res:Response){
 }
 
 //get users contest participations
-export async function getMyContest(req: Request, res:Response){
-    try{
-        const userId  = req.user!.id;
+export async function getMyContest(req: Request, res: Response) {
+    try {
+        const userId = req.user!.id;
         const { role, status } = req.query;
         const where: any = {
             OR: [
@@ -177,8 +183,8 @@ export async function getMyContest(req: Request, res:Response){
         }
 
         //filter by role if specified
-        if(role && (role === "host" || role === "participant")) {
-            if(role === "host") {
+        if (role && (role === "host" || role === "participant")) {
+            if (role === "host") {
                 // Only show contests where user is creator
                 where.AND = [{ createdBy: userId }];
                 delete where.OR;
@@ -193,7 +199,7 @@ export async function getMyContest(req: Request, res:Response){
         }
 
         //filter by status
-        if(status === "live") {
+        if (status === "live") {
             where.live = {
                 isNot: null,
                 endedAt: null
@@ -201,7 +207,7 @@ export async function getMyContest(req: Request, res:Response){
         } else if (status === "ended") {
             where.live = {
                 isNot: null,
-                endedAt : { not: null }
+                endedAt: { not: null }
             }
         } else if (status === "upcoming") {
             where.live = null
@@ -209,8 +215,8 @@ export async function getMyContest(req: Request, res:Response){
 
         const contests = await prisma.contest.findMany({
             where,
-            include:{
-                _count:{
+            include: {
+                _count: {
                     select: {
                         questions: true,
                         members: true
@@ -247,7 +253,7 @@ export async function getMyContest(req: Request, res:Response){
             success: true,
             contests: contestsWithRole
         });
-    }catch(err) {
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
@@ -257,9 +263,9 @@ export async function getMyContest(req: Request, res:Response){
 }
 
 //get leaderboard for contest
-export async function getLeaderboardController(req:Request, res:Response) {
-    try{
-        const {id: contestId } = req.params;
+export async function getLeaderboardController(req: Request, res: Response) {
+    try {
+        const { id: contestId } = req.params;
 
         const contest = await prisma.contest.findUnique({
             where: { id: contestId },
@@ -268,14 +274,14 @@ export async function getLeaderboardController(req:Request, res:Response) {
             }
         });
 
-        if(!contest) {
+        if (!contest) {
             return res.status(404).json({
                 success: false,
                 message: "contest not found"
             })
         }
 
-        if(!contest.live){
+        if (!contest.live) {
             return res.status(404).json({
                 success: false,
                 message: "contest not live yet"
@@ -297,15 +303,15 @@ export async function getLeaderboardController(req:Request, res:Response) {
                 }
             }
         });
-        
-        //group by user and calculate score
-        const scoreMap = new Map<string, {userId: string, score: number, correctCount:number }>();
-        
-        for (const response of responses) {
-            const question  = response.liveContest.contest.questions[response.questionIndex];
-            const currentScore = scoreMap.get(response.userId) || {userId: response.userId, score: 0, correctCount: 0 };
 
-            if(response.isCorrect){
+        //group by user and calculate score
+        const scoreMap = new Map<string, { userId: string, score: number, correctCount: number }>();
+
+        for (const response of responses) {
+            const question = response.liveContest.contest.questions[response.questionIndex];
+            const currentScore = scoreMap.get(response.userId) || { userId: response.userId, score: 0, correctCount: 0 };
+
+            if (response.isCorrect) {
                 currentScore.score += question.points;
                 currentScore.correctCount += 1;
             }
@@ -329,7 +335,7 @@ export async function getLeaderboardController(req:Request, res:Response) {
                     score: data.score,
                     correctAnswers: data.correctCount
                 }
-            }) 
+            })
         );
         //sort by score
         leaderboardData.sort((a, b) => b.score - a.score);
@@ -337,7 +343,7 @@ export async function getLeaderboardController(req:Request, res:Response) {
             success: true,
             leaderboard: leaderboardData
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,

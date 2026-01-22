@@ -89,8 +89,13 @@ export async function requireContestHost(
 }
 
 // Check if user can participate (not the host of the contest)
-export async function requireContestParticipant(req: Request, res: Response, next: NextFunction) {
-  const contestId = req.params.contestId || req.body.contestId;
+// Check if user can participate (not the host & must be a member)
+export async function requireContestParticipant(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const { liveContestId } = req.params;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -100,27 +105,54 @@ export async function requireContestParticipant(req: Request, res: Response, nex
     });
   }
 
+  if (!liveContestId) {
+    return res.status(400).json({
+      success: false,
+      message: "Live contest ID missing"
+    });
+  }
+
   try {
-    const contest = await prisma.contest.findUnique({
-      where: { id: contestId }
+    const liveContest = await prisma.liveContest.findUnique({
+      where: { id: liveContestId },
+      include: {
+        contest: {
+          include: {
+            members: {
+              where: { userId }
+            }
+          }
+        }
+      }
     });
 
-    if (!contest) {
+    if (!liveContest) {
       return res.status(404).json({
         success: false,
-        message: "Contest not found"
+        message: "Live contest not found"
       });
     }
 
-    if (contest.createdBy === userId) {
+    //host cannot participate
+    if (liveContest.contest.createdBy === userId) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: Contest creator cannot participate in their own contest"
+        message: "Contest creator cannot participate"
       });
     }
 
+    // must be a member
+    if (liveContest.contest.members.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not a participant in this contest"
+      });
+    }
+
+    // allowed
     next();
   } catch (error) {
+    console.error("requireContestParticipant error:", error);
     return res.status(500).json({
       success: false,
       message: "Error checking permissions"
