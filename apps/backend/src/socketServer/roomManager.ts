@@ -1,6 +1,5 @@
 import { WebSocket } from "ws";
 import { LiveContestRoom } from "./liveContestRoom.js";
-import { th } from "zod/locales";
 
 export class RoomManager {
     private rooms = new Map<string, LiveContestRoom>();
@@ -34,8 +33,7 @@ export class RoomManager {
         }
     }
 
-    brodcast(livecontestId: string, event:string, payload:any){
+    broadcast(livecontestId: string, event:string, payload:any){
         this.rooms.get(livecontestId)?.broadcast(event, payload);
     }
 }
-
