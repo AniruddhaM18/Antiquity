@@ -1,5 +1,6 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
+import { liveContestStore } from "../redis/liveContestStore.js";
 
 //start live contest - HOST ONLY
 export async function startLiveContest(req: Request, res: Response) {
@@ -7,156 +8,157 @@ export async function startLiveContest(req: Request, res: Response) {
         const { id: contestId } = req.params;
         const userId = req.user!.id;
 
-        //check if user is the creator
+        // Check if already live in Redis
+        if (await liveContestStore.isLive(contestId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Contest is already live"
+            });
+        }
+
+        // ONE DB query to load everything needed
         const contest = await prisma.contest.findUnique({
             where: { id: contestId },
             include: {
-                questions: true,
-                live: true
+                questions: {
+                    orderBy: { id: "asc" }
+                },
+                members: {
+                    select: { userId: true }
+                }
             }
         });
 
         if (!contest) {
             return res.status(404).json({
                 success: false,
-                message: "contest not found"
-            })
+                message: "Contest not found"
+            });
         }
 
         if (contest.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "only contest creator can start contest"
-            })
+                message: "Only contest creator can start contest"
+            });
         }
 
         if (contest.questions.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "cannot start contest without questions"
-            })
+                message: "Cannot start contest without questions"
+            });
         }
 
-        if (contest.live) {
-            return res.status(400).json({
-                success: false,
-                message: "contest is already live"
-            })
-        }
+        // Generate liveContestId
+        const liveContestId = `live_${contestId}_${Date.now()}`;
 
-        const liveContest = await prisma.liveContest.create({
-            data: {
-                contestId,
-                currentIndex: 0
-            }
-        });
+        // Create state (convert Set to Array for Redis)
+        const state = {
+            liveContestId,
+            contestId,
+            currentIndex: 0,
+            startedAt: new Date().toISOString(), // ISO string for Redis
+            questions: contest.questions,
+            createdBy: userId,
+            memberIds: contest.members.map(m => m.userId), // Array instead of Set
+            title: contest.title
+        };
 
-        //adding socket - 
+        // Store in Redis
+        await liveContestStore.start(contestId, liveContestId, state);
+
+        // Broadcast via Redis Pub/Sub (reaches all servers)
         const socketServer = req.app.get("socketServer");
-
-        socketServer.broadcast(
-            liveContest.id,
+        await socketServer.broadcast(
+            liveContestId,
             "contest:started",
             {
-                liveContestId: liveContest.id,
+                liveContestId,
                 contestId
             }
-        )
+        );
 
         return res.status(201).json({
             success: true,
-            message: "contest successfully started",
-            liveContest
-        })
+            message: "Contest successfully started",
+            liveContest: {
+                id: liveContestId,
+                contestId,
+                currentIndex: 0,
+                startedAt: state.startedAt
+            }
+        });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
             success: false,
-            message: "contest couldn't go live/ Internal server error"
-        })
+            message: "Internal server error"
+        });
     }
 }
 
 //move to nextQuestion - HOST ONLY
 export async function moveToNextQuestion(req: Request, res: Response) {
-
     try {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
-        const liveContest = await prisma.liveContest.findUnique({
-            where: {
-                id: liveContestId
-            },
-            include: {
-                contest: {
-                    include: {
-                        questions: true
-                    }
-                }
-            }
-        });
+        // Get from Redis (no DB query!)
+        const state = await liveContestStore.getByLiveId(liveContestId);
 
-        if (!liveContest) {
+        if (!state) {
             return res.status(404).json({
                 success: false,
-                message: "contest not found"
-            })
+                message: "Live contest not found"
+            });
         }
 
-        if (liveContest.contest.createdBy !== userId) {
+        if (state.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "only contest creator can control contest"
-            })
+                message: "Only contest creator can control contest"
+            });
         }
 
-        if (liveContest.endedAt) {
+        if (state.endedAt) {
             return res.status(400).json({
                 success: false,
-                message: "contest already ended"
-            })
+                message: "Contest already ended"
+            });
         }
 
-        const nextIndex = liveContest.currentIndex + 1;
+        // Move to next question (atomic in Redis)
+        const nextIndex = await liveContestStore.nextQuestion(state.contestId);
 
-        if (nextIndex >= liveContest.contest.questions.length) {
+        if (nextIndex === null) {
             return res.status(400).json({
                 success: false,
-                message: "questions finished, End the contest"
-            })
+                message: "No more questions, end the contest"
+            });
         }
 
-        //update index move to next question
-        const updated = await prisma.liveContest.update({
-            where: { id: liveContestId },
-            data: {
-                currentIndex: nextIndex
-            }
-        });
-
-        //socket -
+        // Broadcast via Redis Pub/Sub (all servers)
         const socketServer = req.app.get("socketServer");
-
-        socketServer.broadcast(
+        await socketServer.broadcast(
             liveContestId,
             "question:changed",
             {
-                currentIndex: updated.currentIndex
+                currentIndex: nextIndex
             }
         );
 
         return res.status(200).json({
             success: true,
-            message: "moved to next question",
-            currentIndex: updated.currentIndex
-        })
+            message: "Moved to next question",
+            currentIndex: nextIndex
+        });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
             success: false,
-            message: "Internal server error, couldn't update"
-        })
+            message: "Internal server error"
+        });
     }
 }
 
@@ -166,66 +168,64 @@ export async function endLiveContest(req: Request, res: Response) {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
-        const liveContest = await prisma.liveContest.findUnique({
-            where: { id: liveContestId },
-            include: {
-                contest: true
-            }
-        });
+        // Get from Redis
+        const state = await liveContestStore.getByLiveId(liveContestId);
 
-        if (!liveContest) {
+        if (!state) {
             return res.status(404).json({
                 success: false,
                 message: "Live contest not found"
-            })
+            });
         }
 
-        if (liveContest.contest.createdBy !== userId) {
+        if (state.createdBy !== userId) {
             return res.status(403).json({
                 success: false,
-                message: "Forbidden/ only contest creator can end contest"
-            })
+                message: "Only contest creator can end contest"
+            });
         }
 
-        if (liveContest.endedAt) {
+        if (state.endedAt) {
             return res.status(400).json({
                 success: false,
                 message: "Contest already ended"
-            })
+            });
         }
 
-        //lets fuckin end the contest now 00000HHHHHHHHHHHYEAHHHHHHHHHHHHHHH
-        const ended = await prisma.liveContest.update({
-            where: {
-                id: liveContestId
-            },
-            data: {
-                endedAt: new Date()
-            }
-        });
+        // End in Redis
+        const endedAt = await liveContestStore.end(state.contestId);
 
+        if (!endedAt) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to end contest"
+            });
+        }
+
+        // Optional: Save final results to PostgreSQL for history
+        // await saveContestResultsToDB(state, liveContestId);
+
+        // Broadcast via Redis Pub/Sub
         const socketServer = req.app.get("socketServer");
-
-        socketServer.broadcast(
+        await socketServer.broadcast(
             liveContestId,
             "contest:ended",
             {
-                endedAt: ended.endedAt
+                endedAt
             }
         );
 
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: "contest successfully ended",
-            endedAt: ended.endedAt
-        })
+            message: "Contest successfully ended",
+            endedAt
+        });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
             success: false,
-            message: "Internal server error unable to end contest"
-        })
+            message: "Internal server error"
+        });
     }
 }
 
@@ -238,139 +238,125 @@ export async function getCurrentQuestion(req: Request, res: Response) {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
-        const liveContest = await prisma.liveContest.findUnique({
-            where: { id: liveContestId },
-            include: {
-                contest: {
-                    include: {
-                        questions: {
-                            orderBy: { id: "asc" }
-                        },
-                        members: {
-                            where: { userId }
-                        }
-                    }
-                }
-            }
-        });
+        // Get from Redis (no DB query!)
+        const state = await liveContestStore.getByLiveId(liveContestId);
 
-        if (!liveContest) {
+        if (!state) {
             return res.status(404).json({
                 success: false,
-                message: "contest not found"
-            })
+                message: "Live contest not found"
+            });
         }
 
-        if (liveContest.contest.members.length === 0) {
+        // Check membership (from Redis)
+        if (!state.memberIds.includes(userId)) {
             return res.status(403).json({
                 success: false,
-                message: "forbidden/ you are not a member of this contest"
-            })
+                message: "You are not a member of this contest"
+            });
         }
 
-        // Prevent contest creator from participating
-        if (liveContest.contest.createdBy === userId) {
+        // Prevent creator from participating
+        if (state.createdBy === userId) {
             return res.status(403).json({
                 success: false,
-                message: "forbidden/ contest creator cannot participate in their own contest"
-            })
+                message: "Contest creator cannot participate"
+            });
         }
 
-        if (liveContest.endedAt) {
+        if (state.endedAt) {
             return res.status(400).json({
                 success: false,
-                message: "contest has ended"
-            })
+                message: "Contest has ended"
+            });
         }
 
-        const currentQuestion = liveContest.contest.questions[liveContest.currentIndex];
+        const currentQuestion = state.questions[state.currentIndex];
 
         if (!currentQuestion) {
             return res.status(400).json({
                 success: false,
-                message: "no current question available"
-            })
+                message: "No current question available"
+            });
         }
 
-        //check if user answered this already
-        const existingResponse = await prisma.liveResponse.findUnique({
-            where: {
-                liveContestId_userId_questionIndex: {
-                    liveContestId,
-                    userId,
-                    questionIndex: liveContest.currentIndex
-                }
-            }
-        })
+        // Check if already answered (from Redis)
+        const existingResponse = await liveContestStore.getUserResponse(
+            liveContestId,
+            userId,
+            state.currentIndex
+        );
 
-        //do not send correct answers to users
+        // Remove correct answer before sending
         const { correct, ...questionWithoutAnswer } = currentQuestion;
+
         return res.status(200).json({
             success: true,
             question: questionWithoutAnswer,
-            questionIndex: liveContest.currentIndex,
-            totalQuestions: liveContest.contest.questions.length,
+            questionIndex: state.currentIndex,
+            totalQuestions: state.questions.length,
             alreadyAnswered: !!existingResponse
-        })
+        });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
             success: false,
             message: "Internal server error"
-        })
+        });
     }
 }
 
 //get live contest status
 export async function getLiveStatus(req: Request, res: Response) {
-    try {
-        const { id: liveContestId } = req.params;
-        const userId = req.user!.id;
+  try {
+    // route param is :liveContestId (NOT :id)
+    const { liveContestId } = req.params;
 
-        const liveContest = await prisma.liveContest.findUnique({
-            where: { id: liveContestId },
-            include: {
-                contest: {
-                    include: {
-                        questions: true,
-                        _count: {
-                            select: { members: true }
-                        }
-                    }
-                },
-                _count: {
-                    select: {
-                        responses: true
-                    }
-                }
-            }
-        });
-        if (!liveContest) {
-            return res.status(404).json({
-                success: false,
-                message: "contest not found"
-            })
-        }
+    const liveContest = await prisma.liveContest.findUnique({
+      where: { id: liveContestId },
+      include: {
+        contest: {
+          include: {
+            questions: true,
+            _count: {
+              select: { members: true },
+            },
+          },
+        },
+        _count: {
+          select: {
+            responses: true,
+          },
+        },
+      },
+    });
 
-        return res.status(201).json({
-            success: true,
-            liveContest: {
-                id: liveContest.id,
-                contestId: liveContest.contestId,
-                currentIndex: liveContest.currentIndex,
-                totalQuestions: liveContest.contest.questions.length,
-                startedAt: liveContest.startedAt,
-                endedAt: liveContest.endedAt,
-                isActive: !liveContest.endedAt,
-                totalParticipants: liveContest.contest._count.members,
-                totalResponses: liveContest._count.responses
-            }
-        })
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({
-            success: false,
-            message: "internal Server error"
-        })
+    if (!liveContest) {
+      return res.status(404).json({
+        success: false,
+        message: "contest not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      liveContest: {
+        id: liveContest.id,
+        contestId: liveContest.contestId,
+        currentIndex: liveContest.currentIndex,
+        totalQuestions: liveContest.contest.questions.length,
+        startedAt: liveContest.startedAt,
+        endedAt: liveContest.endedAt,
+        isActive: !liveContest.endedAt,
+        totalParticipants: liveContest.contest._count.members,
+        totalResponses: liveContest._count.responses,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "internal Server error",
+    });
+  }
 }

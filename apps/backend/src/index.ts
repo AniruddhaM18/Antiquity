@@ -1,17 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import http from "http";
-import { SocketServer } from "./socketServer/socketServer.js";
-
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
-
+import { SocketServer } from "./socketServer/socketServer.js";
 import contestRouter from "./routes/contestRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import participantRouter from "./routes/participantRouter.js";
 import liveContestRouter from "./routes/liveContestRoutes.js";
+import { liveContestStore } from "./redis/liveContestStore.js";
 
 const app = express();
 
@@ -20,14 +18,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 
 if (!FRONTEND_URL) {
   console.error("FRONTEND_URL is missing in .env");
-  process.exit(1); //check this
+  process.exit(1);
 }
 
-app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-}));
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -43,28 +43,30 @@ app.use("/api/contests", contestRouter);
 app.use("/api/participants", participantRouter);
 app.use("/api/live", liveContestRouter);
 
-//global error handler - good practice
+// Optional: periodic cleanup (mostly unnecessary if Redis TTLs are correct)
+// Keep it if your Redis store's `cleanup()` does extra safety work.
+setInterval(async () => {
+  try {
+    await liveContestStore.cleanup(60);
+  } catch (err) {
+    console.error("Live contest cleanup failed:", err);
+  }
+}, 5 * 60 * 1000);
+
 // Optional: 404 handler
 app.use((req: express.Request, res: express.Response) => {
   res.status(404).json({
     success: false,
-    message: "Route not found"
+    message: "Route not found",
   });
 });
 
-//for both http and wsss
+// Create HTTP server + WebSocket server on same port
 const server = http.createServer(app);
 
 const socketServer = new SocketServer(server);
 app.set("socketServer", socketServer);
 
-
-//new way for both is now =
-server.listen(PORT, ()=> {
-    console.log(`Backend listening on @:${PORT}`);
-
-})
-
-// app.listen(PORT, () => {
-//   console.log(`Backend listening on http://localhost:${PORT}`);
-// });
+server.listen(PORT, () => {
+  console.log(`Backend listening on @:${PORT}`);
+});

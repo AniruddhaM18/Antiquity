@@ -4,6 +4,7 @@ import {
   createContestSchema,
 } from "../schema/contestSchema.js"
 import { prisma } from "@repo/database"
+import { liveContestStore } from "../redis/liveContestStore.js"
 
 // helper to generate join code
 function createJoinCode(): string {
@@ -187,7 +188,7 @@ export async function addQuestion(req: Request, res: Response) {
 // GET SINGLE CONTEST
 export async function getContest(req: Request, res: Response) {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
     const contest = await prisma.contest.findUnique({
       where: { id },
@@ -199,6 +200,7 @@ export async function getContest(req: Request, res: Response) {
             question: true,
             options: true,
             points: true,
+            // NOTE: correct is intentionally excluded here for participants
           },
         },
         members: {
@@ -212,39 +214,55 @@ export async function getContest(req: Request, res: Response) {
             },
           },
         },
-        live: true,
       },
-    })
+    });
 
     if (!contest) {
       return res.status(404).json({
         success: false,
         message: "Contest not found",
-      })
+      });
     }
 
-    const isHost = contest.createdBy === req.user?.id
+    const isHost = contest.createdBy === req.user?.id;
 
+    // Live info is from Redis (ephemeral)
+    const liveState = await liveContestStore.getByContestId(id);
+    const isLive = !!liveState && !liveState.endedAt;
+
+    // If host, fetch full questions including `correct`
+    // (keeping your original behavior: host sees answers)
+    let hostQuestions: any[] | undefined;
     if (isHost) {
-      const fullQuestions = await prisma.question.findMany({
+      hostQuestions = await prisma.question.findMany({
         where: { contestId: id },
         orderBy: { id: "asc" },
-      })
-
-      contest.questions = fullQuestions as any
+      });
     }
 
     return res.status(200).json({
       success: true,
-      contest,
+      contest: {
+        ...contest,
+        questions: isHost ? hostQuestions : contest.questions,
+        live: liveState
+          ? {
+              id: liveState.liveContestId,
+              currentIndex: liveState.currentIndex,
+              startedAt: liveState.startedAt,
+              endedAt: liveState.endedAt ?? null,
+            }
+          : null,
+      },
       isHost,
-    })
+      isLive,
+    });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-    })
+    });
   }
 }
 

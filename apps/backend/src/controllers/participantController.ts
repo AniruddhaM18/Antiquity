@@ -1,5 +1,6 @@
 import { prisma } from "@repo/database";
 import { Request, Response } from "express";
+import { liveContestStore } from "../redis/liveContestStore.js";
 
 export async function joinContest(req: Request, res: Response) {
     try {
@@ -169,185 +170,160 @@ export async function leaveContest(req: Request, res: Response) {
 }
 
 //get users contest participations
+
 export async function getMyContest(req: Request, res: Response) {
-    try {
-        const userId = req.user!.id;
-        const { role, status } = req.query;
-        const where: any = {
-            OR: [
-                // Contests where user is creator
-                { createdBy: userId },
-                // Contests where user is a member
-                { members: { some: { userId } } }
-            ]
-        }
+  try {
+    const userId = req.user!.id;
+    const { role, status } = req.query;
 
-        //filter by role if specified
-        if (role && (role === "host" || role === "participant")) {
-            if (role === "host") {
-                // Only show contests where user is creator
-                where.AND = [{ createdBy: userId }];
-                delete where.OR;
-            } else {
-                // Only show contests where user is participant (not creator)
-                where.AND = [
-                    { createdBy: { not: userId } },
-                    { members: { some: { userId } } }
-                ];
-                delete where.OR;
-            }
-        }
+    const where: any = {
+      OR: [{ createdBy: userId }, { members: { some: { userId } } }],
+    };
 
-        //filter by status
-        if (status === "live") {
-            where.live = {
-                isNot: null,
-                endedAt: null
-            }
-        } else if (status === "ended") {
-            where.live = {
-                isNot: null,
-                endedAt: { not: null }
-            }
-        } else if (status === "upcoming") {
-            where.live = null
-        }
-
-        const contests = await prisma.contest.findMany({
-            where,
-            include: {
-                _count: {
-                    select: {
-                        questions: true,
-                        members: true
-                    }
-                },
-                live: {
-                    select: {
-                        id: true,
-                        currentIndex: true,
-                        startedAt: true,
-                        endedAt: true
-                    }
-                },
-                members: {
-                    where: { userId },
-                    select: {
-                        role: true
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: "desc"
-            }
-        })
-
-        // Add isCreator flag to each contest
-        const contestsWithRole = contests.map(contest => ({
-            ...contest,
-            isCreator: contest.createdBy === userId,
-            userRole: contest.createdBy === userId ? "host" : contest.members[0]?.role || null
-        }));
-
-        return res.status(200).json({
-            success: true,
-            contests: contestsWithRole
-        });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        })
+    // filter by role if specified
+    if (role && (role === "host" || role === "participant")) {
+      if (role === "host") {
+        where.AND = [{ createdBy: userId }];
+        delete where.OR;
+      } else {
+        where.AND = [{ createdBy: { not: userId } }, { members: { some: { userId } } }];
+        delete where.OR;
+      }
     }
-}
 
+    // IMPORTANT:
+    // If you move "live" to Redis, DB can't reliably filter by live status anymore.
+    // So we will NOT apply your old DB-based status filters here.
+    // We'll filter by Redis state after fetching.
+
+    const contests = await prisma.contest.findMany({
+      where,
+      include: {
+        _count: {
+          select: { questions: true, members: true },
+        },
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const enriched = await Promise.all(
+      contests.map(async (contest) => {
+        const liveState = await liveContestStore.getByContestId(contest.id);
+
+        const live = liveState
+          ? {
+              id: liveState.liveContestId,
+              currentIndex: liveState.currentIndex,
+              startedAt: liveState.startedAt,
+              endedAt: liveState.endedAt ?? null,
+              isActive: !liveState.endedAt,
+            }
+          : null;
+
+        return {
+          ...contest,
+          isCreator: contest.createdBy === userId,
+          userRole: contest.createdBy === userId ? "host" : contest.members[0]?.role || null,
+          live,
+        };
+      })
+    );
+
+    // Apply status filter using Redis live state
+    const filtered =
+      status === "live"
+        ? enriched.filter((c) => c.live?.isActive)
+        : status === "ended"
+          ? enriched.filter((c) => c.live && !c.live.isActive)
+          : status === "upcoming"
+            ? enriched.filter((c) => !c.live)
+            : enriched;
+
+    return res.status(200).json({
+      success: true,
+      contests: filtered,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
 //get leaderboard for contest
 export async function getLeaderboardController(req: Request, res: Response) {
     try {
         const { id: contestId } = req.params;
 
+        // Check if contest exists (DB - source of truth)
         const contest = await prisma.contest.findUnique({
             where: { id: contestId },
-            include: {
-                live: true
-            }
+            select: { id: true }
         });
 
         if (!contest) {
             return res.status(404).json({
                 success: false,
-                message: "contest not found"
-            })
+                message: "Contest not found"
+            });
         }
 
-        if (!contest.live) {
+        // Get state from Redis
+        const state = await liveContestStore.getByContestId(contestId);
+
+        if (!state) {
             return res.status(404).json({
                 success: false,
-                message: "contest not live yet"
-            })
+                message: "Contest is not live"
+            });
         }
 
-        //calculate score from responses 
-        const responses = await prisma.liveResponse.findMany({
-            where: { liveContestId: contest.live.id },
-            include: {
-                liveContest: {
-                    include: {
-                        contest: {
-                            include: {
-                                questions: true
-                            }
-                        }
-                    }
-                }
+        // Get leaderboard from Redis (no DB queries!)
+        const leaderboardData = await liveContestStore.getLeaderboard(state.liveContestId);
+
+        // Fetch user details from DB (source of truth)
+        const userIds = leaderboardData.map(entry => entry.userId);
+        
+        if (userIds.length === 0) {
+            return res.status(200).json({
+                success: true,
+                leaderboard: []
+            });
+        }
+
+        // Single DB query to get all users
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: {
+                id: true,
+                name: true,
+                email: true
             }
         });
 
-        //group by user and calculate score
-        const scoreMap = new Map<string, { userId: string, score: number, correctCount: number }>();
+        const userMap = new Map(users.map(u => [u.id, u]));
 
-        for (const response of responses) {
-            const question = response.liveContest.contest.questions[response.questionIndex];
-            const currentScore = scoreMap.get(response.userId) || { userId: response.userId, score: 0, correctCount: 0 };
+        // Combine leaderboard with user data
+        const leaderboard = leaderboardData.map(entry => ({
+            user: userMap.get(entry.userId) || null,
+            score: entry.score,
+            correctAnswers: entry.correctAnswers
+        }));
 
-            if (response.isCorrect) {
-                currentScore.score += question.points;
-                currentScore.correctCount += 1;
-            }
-
-            scoreMap.set(response.userId, currentScore);
-        }
-
-        //get user details and create leaderboard
-        const leaderboardData = await Promise.all(
-            Array.from(scoreMap.entries()).map(async ([userId, data]) => {
-                const user = await prisma.user.findUnique({
-                    where: { id: userId },
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
-                });
-                return {
-                    user,
-                    score: data.score,
-                    correctAnswers: data.correctCount
-                }
-            })
-        );
-        //sort by score
-        leaderboardData.sort((a, b) => b.score - a.score);
         return res.status(200).json({
             success: true,
-            leaderboard: leaderboardData
-        })
+            leaderboard
+        });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
             success: false,
             message: "Internal server error"
-        })
+        });
     }
 }

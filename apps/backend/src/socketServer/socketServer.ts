@@ -1,10 +1,10 @@
 import { WebSocket, WebSocketServer } from "ws";
-
 import { IncomingMessage } from "http";
-
 import jwt from "jsonwebtoken";
 import { RoomManager } from "./roomManager.js";
-import { prisma } from "@repo/database";
+import { RedisPubSub } from "./redisPubSub.js";
+import { liveContestStore } from "../redis/liveContestStore.js";
+
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 type AuthSocket = WebSocket & {
@@ -14,15 +14,20 @@ type AuthSocket = WebSocket & {
 export class SocketServer {
     private wss: WebSocketServer;
     private rooms = new RoomManager();
+    private pubSub: RedisPubSub;
 
     constructor(httpServer: any) {
         this.wss = new WebSocketServer({
             server: httpServer,
             path: "/ws"
         });
+
+        // Initialize Redis Pub/Sub
+        this.pubSub = new RedisPubSub();
+
         this.wss.on("connection", (socket, req) => {
             this.onConnection(socket as AuthSocket, req)
-        })
+        });
     }
 
     private onConnection(socket: AuthSocket, req: IncomingMessage) {
@@ -50,7 +55,6 @@ export class SocketServer {
         const token = url.searchParams.get("token");
         if (!token) throw new Error("missing jwt/token");
         return token;
-
     }
 
     private async onMessage(socket: AuthSocket, raw: string) {
@@ -68,43 +72,26 @@ export class SocketServer {
 
                     const { liveContestId } = msg;
 
-                    const liveContest = await prisma.liveContest.findUnique({
-                        where: { id: liveContestId },
-                        include: {
-                            contest: {
-                                include: {
-                                    members: {
-                                        where: { userId: socket.userId }
-                                    },
-                                    questions: true
-                                }
-                            }
-                        }
-                    });
+                    // Get from Redis (no DB query!)
+                    const state = await liveContestStore.getByLiveId(liveContestId);
 
-                    if (!liveContest) {
+                    if (!state) {
                         socket.send(JSON.stringify({
                             event: "error",
                             payload: { message: "Live contest not found" }
                         }));
-                        return
-                    };
+                        return;
+                    }
 
-                    if (liveContest.contest.createdBy === socket.userId) {
+                    if (state.createdBy === socket.userId) {
                         socket.send(JSON.stringify({
                             event: "error",
-                            payload: { message: "host can't join as participant" }
+                            payload: { message: "Host can't join as participant" }
                         }));
                         return;
                     }
 
-                    console.log("WS JOIN CHECK", {
-                        socketUserId: socket.userId,
-                        contestId: liveContest.contestId
-                    });
-
-
-                    if (liveContest.contest.members.length === 0) {
+                    if (!state.memberIds.includes(socket.userId)) {
                         socket.send(JSON.stringify({
                             event: "error",
                             payload: { message: "You are not a member of this contest" }
@@ -112,7 +99,7 @@ export class SocketServer {
                         return;
                     }
 
-                    if (liveContest.endedAt) {
+                    if (state.endedAt) {
                         socket.send(JSON.stringify({
                             event: "error",
                             payload: { message: "Contest already ended" }
@@ -120,25 +107,30 @@ export class SocketServer {
                         return;
                     }
 
-                    //join room
+                    // Join local room (for this server)
                     this.rooms.join(liveContestId, socket);
 
-                    //sync state
+                    // Subscribe to Redis Pub/Sub (for cross-server broadcasts)
+                    await this.pubSub.subscribe(liveContestId, socket);
+
+                    // Sync state
                     socket.send(JSON.stringify({
                         event: "contest:sync",
                         payload: {
                             liveContestId,
-                            currentIndex: liveContest.currentIndex,
-                            totalQuestions: liveContest.contest.questions.length,
-                            startedAt: liveContest.startedAt,
-                            endedAt: liveContest.endedAt
+                            currentIndex: state.currentIndex,
+                            totalQuestions: state.questions.length,
+                            startedAt: state.startedAt,
+                            endedAt: state.endedAt
                         }
                     }));
                     break;
                 }
 
                 case "leave:live-contest": {
-                    this.rooms.leave(msg.liveContestId, socket);
+                    const { liveContestId } = msg;
+                    this.rooms.leave(liveContestId, socket);
+                    await this.pubSub.unsubscribe(liveContestId, socket);
                     break;
                 }
             }
@@ -151,8 +143,10 @@ export class SocketServer {
         }
     }
 
-    //called by rest controllers
-    public broadcast(liveContestId: string, event: string, payload: any) {
-        this.rooms.broadcast(liveContestId, event, payload)
+     //Broadcast to all servers via Redis Pub/Sub
+
+    public async broadcast(liveContestId: string, event: string, payload: any) {
+        // Publish to Redis (all servers will receive and broadcast to their sockets)
+        await this.pubSub.publish(liveContestId, event, payload);
     }
 }

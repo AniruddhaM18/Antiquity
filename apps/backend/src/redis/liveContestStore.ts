@@ -10,7 +10,7 @@ export interface LiveContestState {
     endedAt?: string,  //ISO string for Redis
     questions: Question[],
     createdBy: string,
-    membersId: string[],
+    memberIds: string[],
     title: string
 }
 
@@ -263,4 +263,4 @@ export class LiveContestStore {
 }
 
 //singelton instance
-export const liveContestState = new LiveContestStore();
+export const liveContestStore = new LiveContestStore();
