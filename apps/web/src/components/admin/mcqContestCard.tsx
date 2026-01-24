@@ -38,16 +38,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 
   try {
     console.log("data")
-    const { data } = await axios.post(
-      "http://localhost:3001/api/contests/create",
-      { title, description },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    )
+    const { data } = await api.post(`/contests/create`, { title, description });
 
     router.push(`/create/${data.contest.id}`)
   } catch (err) {
@@ -57,7 +48,6 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     setLoading(false)
   }
 }
-
 
   return (
     <div className="space-y-4">

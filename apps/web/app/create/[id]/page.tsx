@@ -5,6 +5,7 @@ import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { QuestionsCard } from "@/src/components/QuestionsCard"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
+import { api } from "@/lib/api"
 
 type Question = {
   text: string
@@ -46,15 +47,7 @@ export default function CreatePage() {
         const apiUrl =
           process.env.NEXT_PUBLIC_BACKEND_URL ||
           "http://localhost:3001/api"
-
-        const { data } = await axios.get(
-          `${apiUrl}/contests/get/${contestId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        const { data } = await api .get(`/contests/get/${contestId}`);
 
         if (data.success) {
           setTitle(data.contest.title)
@@ -92,9 +85,7 @@ export default function CreatePage() {
     fetchContest()
   }, [contestId, router])
 
-  // ============================
   // QUESTION OPERATIONS
-  // ============================
   function addQuestion() {
     const newQuestion: Question = {
       text: "",
@@ -139,71 +130,58 @@ export default function CreatePage() {
     }
   }
 
-  // ============================
   // SAVE QUIZ (ADD QUESTIONS)
-  // ============================
   async function saveQuestions() {
-  const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token")
 
-  if (!token) {
-    alert("You are not logged in")
-    return
-  }
-
-  // frontend validation
-  const invalid = questions.some(
-    (q) =>
-      !q.text.trim() ||
-      q.options.length < 2 ||
-      q.options.some((opt) => !opt.trim()) ||
-      q.correct < 0 ||
-      q.correct >= q.options.length
-  )
-
-  if (invalid) {
-    alert("Please fill all questions correctly before saving")
-    return
-  }
-
-  try {
-    const apiUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "http://localhost:3001/api"
-
-    // ✅ PURE JSON PAYLOAD
-    const payload = {
-      questions: questions.map((q) => ({
-        text: q.text,
-        options: q.options,     // ✅ ARRAY (JSON)
-        correct: q.correct,
-        points: q.points ?? 10,
-      })),
+    if (!token) {
+      alert("You are not logged in")
+      return
     }
 
-    const { data } = await axios.post(
-      `${apiUrl}/contests/add/${contestId}/questions`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
+    // frontend validation
+    const invalid = questions.some(
+      (q) =>
+        !q.text.trim() ||
+        q.options.length < 2 ||
+        q.options.some((opt) => !opt.trim()) ||
+        q.correct < 0 ||
+        q.correct >= q.options.length
     )
 
-    if (data.success) {
-      alert("Quiz saved successfully")
+    if (invalid) {
+      alert("Please fill all questions correctly before saving")
+      return
     }
-  } catch (err: any) {
-    console.error("Failed to save quiz:", err)
-    alert(err.response?.data?.message || "Failed to save quiz")
+
+    try {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        "http://localhost:3001/api"
+
+      //PURE JSON PAYLOAD
+      const payload = {
+        questions: questions.map((q) => ({
+          text: q.text,
+          options: q.options,     //ARRAY (JSON)
+          correct: q.correct,
+          points: q.points ?? 10,
+        })),
+      }
+
+      const { data } = await api.post(`/contests/add/${contestId}/questions`, payload);
+
+      if (data.success) {
+        alert("Quiz saved successfully")
+      }
+    } catch (err: any) {
+      console.error("Failed to save quiz:", err)
+      alert(err.response?.data?.message || "Failed to save quiz")
+    }
   }
-}
 
 
-  // ============================
   // UI
-  // ============================
   return (
     <div className="flex h-full bg-neutral-950 text-neutral-200">
       {/* SIDEBAR */}
@@ -242,11 +220,10 @@ export default function CreatePage() {
               <button
                 key={i}
                 onClick={() => goToQuestion(i)}
-                className={`w-full text-left px-3 py-2 rounded text-sm border transition ${
-                  currentQuestionIndex === i
+                className={`w-full text-left px-3 py-2 rounded text-sm border transition ${currentQuestionIndex === i
                     ? "bg-neutral-800 border-neutral-600"
                     : "border-transparent hover:bg-neutral-900"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span>Question {i + 1}</span>

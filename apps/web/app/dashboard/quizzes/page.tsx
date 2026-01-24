@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
 
 type Contest = {
   id: string
@@ -22,10 +23,7 @@ export default function MyQuizzesPage() {
       const token = localStorage.getItem("token")
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
-      const { data } = await axios.get(
-        `${apiUrl}/contests/getAll?my=true`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const { data } = await api.get(`/contests/getAll?my=true`);
 
       setContests(data.contests)
     }

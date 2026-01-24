@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import axios from "axios"
+import { api } from "@/lib/api"
 
 export default function QuizDetailPage() {
   const { id } = useParams()
@@ -13,10 +14,7 @@ export default function QuizDetailPage() {
       const token = localStorage.getItem("token")
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
-      const { data } = await axios.get(
-        `${apiUrl}/contests/get/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const { data } = await api.get(`/contests/get/${id}`);
       setContest(data.contest)
     }
 
