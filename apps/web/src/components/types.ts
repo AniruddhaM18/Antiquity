@@ -6,9 +6,26 @@ export type QuestionInput = {
   points: number
 }
 
-export type Contest = {
+export interface Contest  {
   id: string
   title: string
-  duration: number // minutes
+  description: string
+  createdBy: string
+  joinCode: string
+  createdAt: Date
+  questions: Question[]
+  // live      LiveContest?
+  // members   ContestMember[]
 }
 
+
+
+export interface Question {
+  id: string
+  contestId: string
+  question: string
+  options: string[]
+  correct: number
+  points: number
+  contest?: Contest
+}

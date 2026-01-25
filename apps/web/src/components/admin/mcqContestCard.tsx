@@ -1,7 +1,4 @@
 "use client"
-import axios from "axios"
-
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -23,31 +20,31 @@ export function ButtonWithForm() {
   const [description, setDescription] = useState("")
   const [loading, setLoading] = useState(false)
 
-async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault()
-  setLoading(true)
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
 
-  const token = localStorage.getItem("token")
-  console.log("token is", token);
+    const token = localStorage.getItem("token")
+    console.log("token is", token);
 
-  if (!token) {
-    alert("You are not logged in")
-    setLoading(false)
-    return
+    if (!token) {
+      alert("You are not logged in")
+      setLoading(false)
+      return
+    }
+
+    try {
+      console.log("data")
+      const { data } = await api.post(`/contests/create`, { title, description });
+
+      router.push(`/create/${data.contest.id}`)
+    } catch (err) {
+      console.error(err)
+      alert("Unauthorized")
+    } finally {
+      setLoading(false)
+    }
   }
-
-  try {
-    console.log("data")
-    const { data } = await api.post(`/contests/create`, { title, description });
-
-    router.push(`/create/${data.contest.id}`)
-  } catch (err) {
-    console.error(err)
-    alert("Unauthorized")
-  } finally {
-    setLoading(false)
-  }
-}
 
   return (
     <div className="space-y-4">
@@ -98,7 +95,8 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
                 className="
                   border-neutral-800
                   shadow-[inset_0_1px_1px_rgba(0,0,0,0.35)]
-                  hover:shadow-[inset_0_1px_1px_rgba(0,0,0,0.35)]
+
+                       hover:shadow-[inset_0_1px_1px_rgba(0,0,0,0.35)]
                   focus-visible:ring-0
                 "
                 required
@@ -111,9 +109,9 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
                 type="submit"
                 disabled={loading}
                 className="
-                  bg-perpdex text-white
+                  bg-orange-500 text-white
                   shadow-none
-                  hover:bg-perpdex hover:shadow-none
+                  hover:bg-orange-300 hover:shadow-none
                   focus-visible:ring-0 focus-visible:ring-offset-0
                   active:shadow-none
                 "
