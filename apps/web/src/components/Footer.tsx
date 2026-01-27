@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import logo from "../../public/Logoo.png";
+
 import { FaSquareGithub, FaLinkedin, FaSquareXTwitter } from "react-icons/fa6";
 import { SiGmail } from "react-icons/si";
 import LogoIcon from "@/components/ui/logo";

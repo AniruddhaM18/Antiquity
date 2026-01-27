@@ -1,7 +1,4 @@
 "use client";
-
-import Image from "next/image";
-import logo from "../../public/Logoo.png";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import LogoIcon from "@/components/ui/logo";
@@ -50,25 +47,23 @@ export function Navbar() {
         <div className="px-6 py-3 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-1">
-        <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
-        <LogoIcon />
-        </div>
+            <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
+              <LogoIcon />
+            </div>
             <span className="text-2xl font-semibold text-slate-300 text-shadow-black/10 text-shadow-lg">
-              Antiquity 
+              Antiquity
             </span>
           </div>
 
-          {/* Actions */}
-        {/* Actions */}
-<div className="flex items-center gap-3">
-  <Link href="/auth/signin" className="hidden md:block">
-    <button className="neo-neutral">Sign in</button>
-  </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/auth/signin" className="hidden md:block">
+              <button className="neo-neutral">Sign in</button>
+            </Link>
 
-  <Link href="/auth/signup">
-    <button className="neo-blue">Get Started</button>
-  </Link>
-</div>
+            <Link href="/auth/signup">
+              <button className="neo-blue">Get Started</button>
+            </Link>
+          </div>
         </div>
       </div>
     </nav>
