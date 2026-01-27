@@ -1,25 +1,19 @@
 "use client"
-
 import React, { useState, useEffect } from "react"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
-import { QuestionsCard } from "@/src/components/QuestionsCard"
+import { nanoid } from "nanoid"
+import QuestionsCard from "@/src/components/QuestionsCard"
 import { useRouter, useParams } from "next/navigation"
-import axios from "axios"
 import { api } from "@/lib/api"
+import { QuestionValue } from "@/src/store/useQuestionStore"
 
-type Question = {
-  text: string
-  options: string[]
-  correct: number
-  points: number
-}
 
 export default function CreatePage() {
   const router = useRouter()
   const params = useParams()
   const contestId = params?.id as string
 
-  const [questions, setQuestions] = useState<Question[]>([])
+  const [questions, setQuestions] = useState<QuestionValue[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0)
 
   const [title, setTitle] = useState("")
@@ -27,9 +21,7 @@ export default function CreatePage() {
   const [loadingContest, setLoadingContest] = useState(true)
   const [error, setError] = useState("")
 
-  // ============================
   // FETCH CONTEST
-  // ============================
   useEffect(() => {
     if (!contestId) return
 
@@ -47,7 +39,7 @@ export default function CreatePage() {
         const apiUrl =
           process.env.NEXT_PUBLIC_BACKEND_URL ||
           "http://localhost:3001/api"
-        const { data } = await api .get(`/contests/get/${contestId}`);
+        const { data } = await api.get(`/contests/get/${contestId}`);
 
         if (data.success) {
           setTitle(data.contest.title)
@@ -55,6 +47,7 @@ export default function CreatePage() {
 
           if (data.contest.questions?.length) {
             const loadedQuestions = data.contest.questions.map((q: any) => ({
+              id: q.id ?? nanoid(),
               text: q.question,
               options: q.options,
               correct: q.correct ?? 0,
@@ -87,32 +80,19 @@ export default function CreatePage() {
 
   // QUESTION OPERATIONS
   function addQuestion() {
-    const newQuestion: Question = {
+    const newQuestion: QuestionValue = {
+      id: nanoid(),
       text: "",
       options: ["", "", "", ""],
       correct: 0,
       points: 10,
     }
 
+
     setQuestions((prev) => [...prev, newQuestion])
     setCurrentQuestionIndex(questions.length)
   }
 
-  function updateQuestion(index: number, data: Question) {
-    setQuestions((prev) => {
-      const next = [...prev]
-      next[index] = data
-      return next
-    })
-  }
-
-  function deleteQuestion(index: number) {
-    setQuestions((prev) => prev.filter((_, i) => i !== index))
-
-    if (currentQuestionIndex >= questions.length - 1) {
-      setCurrentQuestionIndex(Math.max(0, questions.length - 2))
-    }
-  }
 
   function goToQuestion(index: number) {
     setCurrentQuestionIndex(index)
@@ -131,54 +111,54 @@ export default function CreatePage() {
   }
 
   // SAVE QUIZ (ADD QUESTIONS)
-  async function saveQuestions() {
-    const token = localStorage.getItem("token")
+  // async function saveQuestions() {
+  //   const token = localStorage.getItem("token")
 
-    if (!token) {
-      alert("You are not logged in")
-      return
-    }
+  //   if (!token) {
+  //     alert("You are not logged in")
+  //     return
+  //   }
 
-    // frontend validation
-    const invalid = questions.some(
-      (q) =>
-        !q.text.trim() ||
-        q.options.length < 2 ||
-        q.options.some((opt) => !opt.trim()) ||
-        q.correct < 0 ||
-        q.correct >= q.options.length
-    )
+  //   // frontend validation
+  //   const invalid = questions.some(
+  //     (q) =>
+  //       !q.text.trim() ||
+  //       q.options.length < 2 ||
+  //       q.options.some((opt) => !opt.trim()) ||
+  //       q.correct < 0 ||
+  //       q.correct >= q.options.length
+  //   )
 
-    if (invalid) {
-      alert("Please fill all questions correctly before saving")
-      return
-    }
+  //   if (invalid) {
+  //     alert("Please fill all questions correctly before saving")
+  //     return
+  //   }
 
-    try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:3001/api"
+  //   try {
+  //     const apiUrl =
+  //       process.env.NEXT_PUBLIC_BACKEND_URL ||
+  //       "http://localhost:3001/api"
 
-      //PURE JSON PAYLOAD
-      const payload = {
-        questions: questions.map((q) => ({
-          text: q.text,
-          options: q.options,     //ARRAY (JSON)
-          correct: q.correct,
-          points: q.points ?? 10,
-        })),
-      }
+  //     //PURE JSON PAYLOAD
+  //     const payload = {
+  //       questions: questions.map((q) => ({
+  //         text: q.text,
+  //         options: q.options,     //ARRAY (JSON)
+  //         correct: q.correct,
+  //         points: q.points ?? 10,
+  //       })),
+  //     }
 
-      const { data } = await api.post(`/contests/add/${contestId}/questions`, payload);
+  //     const { data } = await api.post(`/contests/add/${contestId}/questions`, payload);
 
-      if (data.success) {
-        alert("Quiz saved successfully")
-      }
-    } catch (err: any) {
-      console.error("Failed to save quiz:", err)
-      alert(err.response?.data?.message || "Failed to save quiz")
-    }
-  }
+  //     if (data.success) {
+  //       alert("Quiz saved successfully")
+  //     }
+  //   } catch (err: any) {
+  //     console.error("Failed to save quiz:", err)
+  //     alert(err.response?.data?.message || "Failed to save quiz")
+  //   }
+  // }
 
 
   // UI
@@ -203,7 +183,6 @@ export default function CreatePage() {
 
         {questions.length > 0 && (
           <button
-            onClick={saveQuestions}
             className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition"
           >
             Save Quiz
@@ -221,8 +200,8 @@ export default function CreatePage() {
                 key={i}
                 onClick={() => goToQuestion(i)}
                 className={`w-full text-left px-3 py-2 rounded text-sm border transition ${currentQuestionIndex === i
-                    ? "bg-neutral-800 border-neutral-600"
-                    : "border-transparent hover:bg-neutral-900"
+                  ? "bg-neutral-800 border-neutral-600"
+                  : "border-transparent hover:bg-neutral-900"
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -268,12 +247,8 @@ export default function CreatePage() {
             </div>
           ) : (
             <QuestionsCard
-              questionNo={currentQuestionIndex + 1}
-              value={questions[currentQuestionIndex]}
-              onChange={(data) =>
-                updateQuestion(currentQuestionIndex, data)
-              }
-              onDelete={() => deleteQuestion(currentQuestionIndex)}
+              question={questions[currentQuestionIndex]}
+              index={currentQuestionIndex}
             />
           )}
         </div>

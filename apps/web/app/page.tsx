@@ -17,7 +17,7 @@ export default function Home() {
           beamWidth={2}
           beamHeight={15}
           beamNumber={20}
-          lightColor="#98a4f0"
+          lightColor="#fbbf24"
           speed={5}
           noiseIntensity={1.75}
           scale={0.2}
