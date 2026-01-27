@@ -1,8 +1,5 @@
 import { Request, Response } from "express"
-import {
-  addQuestionSSchema,
-  createContestSchema,
-} from "../schema/contestSchema.js"
+import { addQuestionSSchema, createContestSchema} from "../schema/contestSchema.js"
 import { prisma } from "@repo/database"
 import { liveContestStore } from "../redis/liveContestStore.js"
 
@@ -16,6 +13,119 @@ function createJoinCode(): string {
   return code
 }
 
+//CREATE CONTEST AND SAVE QUESTIONS TOGETHER
+export async function createContestWithQuestion(
+  req: Request,
+  res: Response
+) {
+  try {
+    const contestId = req.params.id
+
+    if (!contestId) {
+      return res.status(400).json({
+        success: false,
+        message: "Contest id is required",
+      })
+    }
+
+    // Single validation
+    const validation = createContestSchema.safeParse(req.body)
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input schema",
+      })
+    }
+
+    const { title, description, questions = [] } = validation.data
+
+    // Validate correct indices
+    for (const q of questions) {
+      if (q.correct < 0 || q.correct >= q.options.length) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid correct answer index for question: ${q.text}`,
+        })
+      }
+    }
+
+    // Generate join code
+    let joinCode = createJoinCode()
+    let attempts = 0
+
+    while (attempts < 10) {
+      const exists = await prisma.contest.findUnique({
+        where: { joinCode },
+      })
+      if (!exists) break
+      joinCode = createJoinCode()
+      attempts++
+    }
+
+    if (attempts === 10) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to generate unique join code",
+      })
+    }
+
+    // Atomic write
+    const contest = await prisma.$transaction(async (tx) => {
+      const contest = await tx.contest.create({
+        data: {
+          id: contestId, // FRONTEND ID
+          title,
+          description,
+          joinCode,
+          createdBy: req.user!.id,
+          members: {
+            create: {
+              userId: req.user!.id,
+              role: "host",
+            },
+          },
+        },
+      })
+
+      if (questions.length > 0) {
+        await tx.question.createMany({
+          data: questions.map((q) => ({
+            contestId: contest.id,
+            question: q.text,
+            options: q.options,
+            correct: q.correct,
+            points: q.points ?? 10,
+          })),
+        })
+      }
+
+      return contest
+    })
+
+    return res.status(201).json({
+      success: true,
+      contestId: contest.id,
+      message: "Contest created successfully",
+    })
+  } catch (err: any) {
+    // Handle duplicate contest creation safely
+    if (err.code === "P2002") {
+      return res.status(409).json({
+        success: false,
+        message: "Contest already exists",
+      })
+    }
+
+    console.error("Error creating contest", err)
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    })
+  }
+}
+
+
+//////RESPECTFULLY DEPRICIATED ///// SALUTE TO YOU SIIRRRRRRRRRRR 
 // CREATE CONTEST
 export async function createContest(req: Request, res: Response) {
   try {
@@ -149,7 +259,7 @@ export async function addQuestion(req: Request, res: Response) {
     }
 
     console.log(
-  "SAVE QUIZ PAYLOAD 👉",
+  "SAVE QUIZ PAYLOAD ",
   JSON.stringify(questions, null, 2)
 )
 
