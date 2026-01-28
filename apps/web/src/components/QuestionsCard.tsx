@@ -173,11 +173,7 @@ export default function QuestionsCard({ question: questionProp, index }: Questio
      <aside className="w-48 border-l border-neutral-800">
         <EditorPallate />
       </aside>
-    </main> 
-
-    
-
-    
+    </main>     
     </div>
   )
 }
