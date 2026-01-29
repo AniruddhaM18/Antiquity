@@ -16,34 +16,29 @@ export interface Contest {
   description?: string
   questions: QuestionValue[]
   isPersisted: boolean
+  joinCode?: string
 }
 
 interface QuestionStore {
   contest: Contest
   currentViewingIndex: number
 
-  // navigation
   setCurrentViewingIndex: (index: number) => void
-
-  // contest meta
   setContestTitle: (title: string) => void
   setContestDescription: (description: string) => void
 
-  // local question editing
   addQuestion: () => void
   updateQuestion: (id: string, data: Partial<QuestionValue>) => void
   deleteQuestion: (id: string) => void
 
-  // backend
-  createContest: () => Promise<void>
-  saveQuestions: () => Promise<void>
+  createContest: () => Promise<string | undefined>
+  saveQuestions: () => Promise<string | undefined>
   loadContest: (contestId: string) => Promise<void>
 }
 
-
 function createEmptyContest(): Contest {
   return {
-    id: nanoid(), // frontend owns ID
+    id: nanoid(),
     title: "",
     description: "",
     questions: [],
@@ -51,18 +46,14 @@ function createEmptyContest(): Contest {
   }
 }
 
-
 export const useQuestionStore = create<QuestionStore>((set, get) => ({
-//state
-    contest: createEmptyContest(),
+  contest: createEmptyContest(),
   currentViewingIndex: 0,
 
-  //navigarion
   setCurrentViewingIndex(index) {
     set({ currentViewingIndex: index })
   },
 
- 
   setContestTitle(title) {
     set((state) => ({
       contest: { ...state.contest, title },
@@ -120,15 +111,13 @@ export const useQuestionStore = create<QuestionStore>((set, get) => ({
     })
   },
 
-
-  // CREATE contest + questions (ONE TIME)
   async createContest() {
     const { contest } = get()
 
-    if (contest.isPersisted) return
-    if (!contest.title.trim()) return
+    if (contest.isPersisted) return contest.joinCode
+    if (!contest.title.trim()) return undefined
 
-    await api.post(`/contests/create/${contest.id}`, {
+    const res = await api.post(`/contests/create/${contest.id}`, {
       title: contest.title,
       description: contest.description,
       questions: contest.questions.map((q) => ({
@@ -140,20 +129,27 @@ export const useQuestionStore = create<QuestionStore>((set, get) => ({
     })
 
     set((state) => ({
-      contest: { ...state.contest, isPersisted: true },
+      contest: {
+        ...state.contest,
+        isPersisted: true,
+        joinCode: res.data.joinCode,
+      },
     }))
+
+    return res.data.joinCode
   },
 
-  // UPDATE questions only (host-only)
   async saveQuestions() {
     const { contest, createContest } = get()
 
+    let joinCode = contest.joinCode
+
     if (!contest.isPersisted) {
-      await createContest()
+      joinCode = await createContest()
     }
 
     const latest = get().contest
-    if (!latest.isPersisted) return
+    if (!latest.isPersisted) return joinCode
 
     await api.post(`/contests/add/${latest.id}/questions`, {
       questions: latest.questions.map((q) => ({
@@ -163,9 +159,10 @@ export const useQuestionStore = create<QuestionStore>((set, get) => ({
         points: q.points,
       })),
     })
+
+    return joinCode
   },
 
-  // LOAD or INIT draft
   async loadContest(contestId: string) {
     try {
       const res = await api.get(`/contests/get/${contestId}`)
@@ -183,6 +180,7 @@ export const useQuestionStore = create<QuestionStore>((set, get) => ({
             points: q.points,
           })),
           isPersisted: true,
+          joinCode: res.data.contest.joinCode, //IMPORTANT
         },
         currentViewingIndex: 0,
       })

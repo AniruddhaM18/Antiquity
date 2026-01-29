@@ -41,9 +41,12 @@ interface LiveQuizStore {
   currentIndex: number
   answers: Record<string, number>
   locked: boolean
+  liveContestId: string | null
+  contestId: string | null
 
   // actions
   setContest: (contest: LiveContest) => void
+  setLiveIds: (liveContestId: string, contestId: string) => void
   selectAnswer: (questionId: string, optionIndex: number) => void
   next: () => void
   previous: () => void
@@ -57,9 +60,15 @@ export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
   currentIndex: 0,
   answers: {},
   locked: false,
+  liveContestId: null,
+  contestId: null,
 
   setContest(contest) {
     set({ contest, currentIndex: 0, answers: {}, locked: false })
+  },
+
+  setLiveIds(liveContestId, contestId) {
+    set({ liveContestId, contestId })
   },
 
   selectAnswer(questionId, optionIndex) {
