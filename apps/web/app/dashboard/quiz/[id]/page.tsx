@@ -29,7 +29,7 @@ export default function QuizDetailPage() {
 
       <div className="flex gap-3">
         <button
-          onClick={() => router.push(`/create/${contest.id}`)}
+          onClick={() => router.push(`/new/${contest.id}`)}
           className="px-4 py-2 rounded bg-neutral-800"
         >
           Edit Quiz
@@ -37,7 +37,7 @@ export default function QuizDetailPage() {
 
         <button
           onClick={() => router.push(`/contest/${id}/launch`)}
-          className="px-4 py-2 rounded bg-blue-600"
+          className="px-4 py-2 rounded bg-orange-600"
         >
           Launch Quiz
         </button>

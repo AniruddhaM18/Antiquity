@@ -1,9 +1,13 @@
-import { QuestionsCard } from "@/src/components/QuestionsCard";
+"use client"
+
+import NewLivePage from "@/src/components/live/LivePage"
+import LivePage from "../live/[id]/page"
+
 
 export default function TestPage() {
   return (
-    <div className="h-screen bg-black">
-      <QuestionsCard questionNo={0} />
+    <div>
+      <NewLivePage />
     </div>
-  );
+  )
 }

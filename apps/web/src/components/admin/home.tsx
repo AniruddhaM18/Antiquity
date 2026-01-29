@@ -14,7 +14,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
 
       <SidebarInset>
-        {/* TOP BAR */}
         <header className="h-14 flex items-center gap-2 px-3 border-b border-neutral-800">
           <SidebarTrigger className="h-9 w-9">
             <PanelLeft className="size-5" />

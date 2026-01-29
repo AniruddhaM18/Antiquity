@@ -3,13 +3,12 @@
 import { Plus, Settings } from "lucide-react";
 import { ButtonWithForm } from "./mcqContestCard";
 import { JoinContestButton } from "./joinContestButton";
-import { Button } from "@/components/ui/button";
+import ContestSection from "./contestSection";
 
 export default function HomeDashboard() {
   return (
     <div className="p-6 space-y-6">
-      {/* Header Row */}
-      <div className="flex items-center justify-between">
+       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-neutral-100">
           Home
         </h1>
@@ -27,7 +26,7 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      {/* Info / Stats Section */}
+      {/* Create / Join */}
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
           <ButtonWithForm />
@@ -36,13 +35,10 @@ export default function HomeDashboard() {
         <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900">
           <JoinContestButton />
         </div>
-
       </div>
 
-      {/* Generic Content Area */}
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900 h-64 flex items-center justify-center text-neutral-500">
-        Drop any component here
-      </div>
+ 
+      <ContestSection />
     </div>
   );
 }
