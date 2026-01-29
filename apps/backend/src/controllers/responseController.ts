@@ -79,17 +79,6 @@ export async function submitAnswer(req: Request, res: Response) {
             isCorrect
         );
 
-        // Broadcast via Redis Pub/Sub (all servers)
-        const socketServer = req.app.get("socketServer");
-        await socketServer.broadcast(
-            liveContestId,
-            "leaderboard:update",
-            {
-                questionIndex: state.currentIndex,
-                userId
-            }
-        );
-
         return res.status(201).json({
             success: true,
             message: "Answer successfully submitted",

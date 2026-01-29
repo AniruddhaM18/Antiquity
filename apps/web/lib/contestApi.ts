@@ -1,20 +1,12 @@
-import { api } from "./api";
-import { QuestionValue } from "@/src/store/useQuestionStore";
+import { api } from "@/lib/api";
 
-export const getContest = (id: string) => {
-  return api.get(`/contests/get/${id}`);
-};
 
-export const saveQuestions = (
-  contestId: string,
-  questions: QuestionValue[]
-) => {
-  return api.post(`/contests/add/${contestId}/questions`, {
-    questions: questions.map((q) => ({
-      text: q.question,   // frontend → backend mapping
-      options: q.options,
-      correct: q.correct,
-      points: q.points,
-    })),
-  });
-};
+export async function fetchMyContests() {
+  const { data } = await api.get("/participants/my-contest");
+  return data.contests;
+}
+
+export async function fetchUserContests() {
+  const res = await api.get("/contests/getAll");
+  return res.data.contests;
+}
