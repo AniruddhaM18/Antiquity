@@ -78,7 +78,6 @@ export function JoinContestButton() {
 
   return (
     <div className="space-y-4">
-      {/* Open Form Button */}
       <Button
         className="
           bg-neutral-300 text-black
@@ -92,7 +91,6 @@ export function JoinContestButton() {
         Join Contest
       </Button>
 
-      {/* Form */}
       {open && (
         <Card className="bg-neutral-900 border border-neutral-800 shadow-none rounded-md">
           <form onSubmit={handleSubmit}>
@@ -103,14 +101,12 @@ export function JoinContestButton() {
             </CardHeader>
 
             <CardContent className="space-y-3">
-              {/* Dummy data indicator */}
               {useDummy && (
                 <div className="p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-400">
                   <p className="text-yellow-300/70">🧪 Testing Mode: Try codes TEST123 or DUMMY</p>
                 </div>
               )}
 
-              {/* Join Code */}
               <Input
                 placeholder="Enter join code"
                 value={joinCode}
@@ -125,8 +121,7 @@ export function JoinContestButton() {
                 maxLength={10}
               />
 
-              {/* Error Message */}
-              {error && (
+               {error && (
                 <div className="p-2 bg-red-500/10 border border-red-500/30 rounded text-xs text-red-400">
                   {error}
                 </div>
@@ -149,7 +144,6 @@ export function JoinContestButton() {
                 {loading ? "Joining..." : "Join"}
               </Button>
 
-              {/* Cancel */}
               <Button
                 type="button"
                 variant="outline"
