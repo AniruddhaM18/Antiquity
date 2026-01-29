@@ -5,13 +5,12 @@ import {
   IconArrowWaveRightUp,
   IconBoxAlignTopLeft,
   IconClipboardCopy,
-  IconSparkles,
-  IconRocket,
   IconBulb,
 } from "@tabler/icons-react";
 
-import { RiQuestionnaireLine } from "react-icons/ri";
 import { VscGraph } from "react-icons/vsc";
+import { IoMdSearch } from "react-icons/io";
+
 
 
 const BentoGrid = ({
@@ -41,8 +40,8 @@ const BentoGridItem = ({
   icon,
 }: {
   className?: string;
-  title?: string | React.ReactNode; 
-  description?: string | React.ReactNode; 
+  title?: string | React.ReactNode;
+  description?: string | React.ReactNode;
   header?: React.ReactNode;
   icon?: React.ReactNode;
 }) => {
@@ -56,10 +55,10 @@ const BentoGridItem = ({
       {header}
       <div className="transition duration-200 group-hover/bento:translate-x-2">
         {icon}
-        <div className="mt-2 mb-2 font font-semibold text-neutral-600 dark:text-mithai">
+        <div className="mt-2 mb-2 font font-semibold text-neutral-600 dark:text-orange-100">
           {title}
         </div>
-        <div className="font text-xs font-normal text-neutral-600 dark:text-mithai/80">
+        <div className="font text-xs font-normal text-orange-200/80">
           {description}
         </div>
       </div>
@@ -67,35 +66,64 @@ const BentoGridItem = ({
   );
 };
 
-const SkeletonOne = () => (
-  <div className="flex flex-1 w-full h-full min-h-[8rem] rounded-xl bg-neutral-900/70 relative overflow-hidden p-6">
+
+const SkeletonBase = ({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) => (
+  <div
+    className="
+      flex flex-1 w-full h-full min-h-[8rem] rounded-xl
+      bg-gradient-to-t
+      from-[#ea580c]/10
+      via-[#c2410c]/14
+      to-neutral-950
+      relative overflow-hidden p-6
+    "
+  >
     <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <RiQuestionnaireLine className="h-12 w-12 text-zinc-400 mb-3" />
-      <p className="text-neutral-300 text-md font-medium">Transform Ideas</p>
-      <p className="text-neutral-500 text-xs mt-1">Into Reality</p>
+      {icon}
+      <p className="text-neutral-300 text-sm font-medium mt-3">
+        {title}
+      </p>
+      <p className="text-orange-200 text-xs mt-1">
+        {subtitle}
+      </p>
     </div>
   </div>
+);
+
+
+const SkeletonOne = () => (
+  <SkeletonBase
+    icon={<IoMdSearch className="h-12 w-12 text-orange-400/80" />}
+    title="Transform Ideas"
+    subtitle="Into Reality"
+  />
 );
 
 const SkeletonTwo = () => (
-  <div className="flex flex-1 w-full h-full min-h-[8rem] rounded-xl bg-gradient-to-t from-[#576ae7]/15 via-[#4958be]/25 to-neutral-950 relative overflow-hidden p-6">
-    <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <VscGraph className="h-12 w-12 text-perpdex mb-3" />
-      <p className="text-neutral-300 text-sm font-medium">Launch Fast</p>
-      <p className="text-neutral-500 text-xs mt-1">Build Better</p>
-    </div>
-  </div>
+  <SkeletonBase
+    icon={<VscGraph className="h-12 w-12 text-orange-400/80" />}
+    title="Launch Fast"
+    subtitle="Build Better"
+  />
 );
 
 const SkeletonThree = () => (
-  <div className="flex flex-1 w-full h-full min-h-[8rem] rounded-xl bg-gradient-to-t from-[#576ae7]/15 via-[#4958be]/25 to-neutral-950 relative overflow-hidden p-6">
-    <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <IconBulb className="h-12 w-12 text-[#576ae7] mb-3" />
-      <p className="text-neutral-300 text-sm font-medium">Innovate Daily</p>
-      <p className="text-neutral-500 text-xs mt-1">Think Different</p>
-    </div>
-  </div>
+  <SkeletonBase
+    icon={<IconBulb className="h-12 w-12 text-orange-400/80" />}
+    title="Innovate Daily"
+    subtitle="Think Different"
+  />
 );
+
+
 
 const items = [
   {
@@ -118,6 +146,8 @@ const items = [
     icon: <IconBoxAlignTopLeft className="h-4 w-4 text-neutral-500" />,
   },
 ];
+
+
 
 export default function BentoGridSingleRow() {
   return (

@@ -11,14 +11,14 @@ import WorksDeck from "@/src/components/ui/work-grid";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200">
+    <div className="min-h-screen bg-black text-neutral-200">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Beams
           beamWidth={2}
           beamHeight={15}
           beamNumber={20}
-          lightColor="#fbbf24"
-          speed={5}
+          lightColor="#ff9f6b"
+          speed={7}
           noiseIntensity={1.75}
           scale={0.2}
           rotation={160}
@@ -36,10 +36,10 @@ export default function Home() {
       {/* FEATURES SECTION */}
       <section className="max-w-6xl mx-auto px-6 py-36">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-200">
+          <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-100">
             Everything you need to engage
           </h2>
-          <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-lg text-orange-100/80 max-w-2xl mx-auto">
             Powerful features designed to make your contests interactive and memorable
           </p>
         </div>
@@ -53,7 +53,7 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-200">
             How it works
           </h2>
-          <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-lg text-orange-100/80 max-w-2xl mx-auto">
             Three simple steps to engage your audience
           </p>
         </div>

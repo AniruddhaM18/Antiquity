@@ -50,10 +50,10 @@ const BentoGridItem = ({
       {header}
       <div className="transition duration-200 group-hover/bento:translate-x-2">
         {icon}
-        <div className="mt-2 mb-2 font font-semibold text-neutral-600 dark:text-mithai">
+        <div className="mt-2 mb-2 font font-semibold text-neutral-600 dark:text-orange-100">
           {title}
         </div>
-        <div className="font text-xs font-normal text-neutral-600 dark:text-mithai/80">
+        <div className="font text-xs font-normal text-neutral-600 dark:text-orange-100/80">
           {description}
         </div>
       </div>
@@ -62,7 +62,11 @@ const BentoGridItem = ({
 };
 
 const Skeleton = () => (
-  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-t from-[#576ae7]/15 via-[#4958be]/25 to-neutral-950 "></div>
+  <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl
+    bg-gradient-to-t
+    from-[#ea580c]/10
+    via-[#c2410c]/15
+    to-neutral-950 "></div>
 );
 
 const items = [

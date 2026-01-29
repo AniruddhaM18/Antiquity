@@ -8,7 +8,7 @@ export function HeroSection() {
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-inter font-medium mb-6 leading-tight text-neutral-200">
                     Listen, learn and talk
                     <br />
-                    <span className="text-violet-200">together</span>
+                    <span className="text-orange-100">together</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-neutral-300 font-light max-w-2xl mx-auto mb-12 leading-relaxed">
                     Create interactive contests, quizzes, and polls
@@ -18,7 +18,7 @@ export function HeroSection() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/create">
+                    <Link href="/auth/signup">
                         <button className="px-8 py-5 rounded-md text-base font-medium neo-blue">
                             Get started for free
                         </button>
