@@ -105,7 +105,8 @@ export async function createContestWithQuestion(
     return res.status(201).json({
       success: true,
       contestId: contest.id,
-      message: "Contest created successfully",
+      joinCode,
+      message: "Contest created successfully"
     })
   } catch (err: any) {
     // Handle duplicate contest creation safely

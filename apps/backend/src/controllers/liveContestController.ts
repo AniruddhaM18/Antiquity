@@ -68,17 +68,6 @@ export async function startLiveContest(req: Request, res: Response) {
         // Store in Redis
         await liveContestStore.start(contestId, liveContestId, state);
 
-        // Broadcast via Redis Pub/Sub (reaches all servers)
-        const socketServer = req.app.get("socketServer");
-        await socketServer.broadcast(
-            liveContestId,
-            "contest:started",
-            {
-                liveContestId,
-                contestId
-            }
-        );
-
         return res.status(201).json({
             success: true,
             message: "Contest successfully started",
@@ -138,16 +127,6 @@ export async function moveToNextQuestion(req: Request, res: Response) {
             });
         }
 
-        // Broadcast via Redis Pub/Sub (all servers)
-        const socketServer = req.app.get("socketServer");
-        await socketServer.broadcast(
-            liveContestId,
-            "question:changed",
-            {
-                currentIndex: nextIndex
-            }
-        );
-
         return res.status(200).json({
             success: true,
             message: "Moved to next question",
@@ -204,16 +183,6 @@ export async function endLiveContest(req: Request, res: Response) {
 
         // Optional: Save final results to PostgreSQL for history
         // await saveContestResultsToDB(state, liveContestId);
-
-        // Broadcast via Redis Pub/Sub
-        const socketServer = req.app.get("socketServer");
-        await socketServer.broadcast(
-            liveContestId,
-            "contest:ended",
-            {
-                endedAt
-            }
-        );
 
         return res.status(200).json({
             success: true,

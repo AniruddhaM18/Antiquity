@@ -4,7 +4,6 @@ import http from "http";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
-import { SocketServer } from "./socketServer/socketServer.js";
 import contestRouter from "./routes/contestRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import participantRouter from "./routes/participantRouter.js";
@@ -61,11 +60,7 @@ app.use((req: express.Request, res: express.Response) => {
   });
 });
 
-// Create HTTP server + WebSocket server on same port
 const server = http.createServer(app);
-
-const socketServer = new SocketServer(server);
-app.set("socketServer", socketServer);
 
 server.listen(PORT, () => {
   console.log(`Backend listening on @:${PORT}`);
