@@ -3,12 +3,12 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { fetchContest } from "@/lib/contestApi"
-import { moveToNextQuestion, endLiveContest } from "@/lib/contestApi"
+import { endLiveContest } from "@/lib/contestApi"
 import { useLiveQuizStore } from "@/src/store/LiveQuestionStore"
-import NewLivePage from "@/src/components/live/LivePage"
 import Leaderboard from "@/src/components/live/Leaderboard"
 import QuestionsPallate from "@/src/components/live/QuestionsPallate"
 import type { Contest } from "@/src/components/types"
+import HostQuestionCard from "@/src/components/live/HostQuestionsCard"
 
 export default function HostLivePage() {
   const params = useParams()
@@ -20,11 +20,14 @@ export default function HostLivePage() {
   const [contest, setContest] = useState<Contest | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [hasEnded, setHasEnded] = useState(false)
 
   const setContestStore = useLiveQuizStore((s) => s.setContest)
   const setLiveIds = useLiveQuizStore((s) => s.setLiveIds)
   const currentIndex = useLiveQuizStore((s) => s.currentIndex)
   const contestFromStore = useLiveQuizStore((s) => s.contest)
+  const next = useLiveQuizStore((s) => s.next)
+  const previous = useLiveQuizStore((s) => s.previous)
 
   useEffect(() => {
     if (!contestId || !liveContestId) {
@@ -55,6 +58,7 @@ export default function HostLivePage() {
           id: q.id,
           question: q.question,
           options: Array.isArray(q.options) ? q.options : [],
+          correct: q.correct ?? 0,
         }))
         setContestStore({ id: c.id, title: c.title, questions })
         setLiveIds(liveContestId, c.id)
@@ -69,20 +73,13 @@ export default function HostLivePage() {
     return () => { cancelled = true }
   }, [contestId, liveContestId, setContestStore, setLiveIds])
 
-  const handleNext = async () => {
-    if (!liveContestId) return
-    try {
-      await moveToNextQuestion(liveContestId)
-    } catch (e) {
-      console.error(e)
-    }
-  }
+
 
   const handleEnd = async () => {
     if (!liveContestId) return
     try {
       await endLiveContest(liveContestId)
-      router.push("/dashboard/created")
+      setHasEnded(true)
     } catch (e) {
       console.error(e)
     }
@@ -110,26 +107,77 @@ export default function HostLivePage() {
     )
   }
 
+  // Show leaderboard after quiz has ended
+  if (hasEnded) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-lg">
+          <h1 className="text-2xl font-bold text-white text-center mb-6">
+            Quiz Ended!
+          </h1>
+          <div className="h-[400px]">
+            <Leaderboard />
+          </div>
+          <button
+            onClick={() => router.push("/dashboard/created")}
+            className="mt-6 w-full px-4 py-3 rounded bg-orange-600 hover:bg-orange-500 text-white font-medium"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const total = contestFromStore?.questions?.length ?? 0
   const isLastQuestion = total > 0 && currentIndex >= total - 1
+
+  const currentQuestion = contestFromStore?.questions?.[currentIndex] as {
+    id: string
+    question: string
+    options: string[]
+    correct?: number
+  } | undefined
 
   return (
     <div className="w-screen h-screen bg-neutral-950">
       <div className="flex w-full h-full">
-        {/* <div className="w-[20%] h-full">
+        {/* Left: Questions Palette */}
+        <div className="w-[20%] h-full border-r border-neutral-800">
           <QuestionsPallate />
-        </div> */}
-        <div className=" h-full flex flex-col">
+        </div>
+
+        {/* Center: Question Card */}
+        <div className="w-[55%] h-full flex flex-col">
           <div className="flex-1 overflow-y-auto">
-            {contestFromStore && <NewLivePage />}
+            {currentQuestion ? (
+              <HostQuestionCard
+                question={currentQuestion}
+                index={currentIndex}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-neutral-400">
+                Loading question...
+              </div>
+            )}
           </div>
           <div className="border-t border-neutral-800 px-4 py-3 flex items-center justify-between gap-4 bg-neutral-950">
             <button
-              onClick={handleNext}
+              onClick={previous}
+              disabled={currentIndex === 0}
+              className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <div className="text-sm text-neutral-400">
+              Question {currentIndex + 1} of {total}
+            </div>
+            <button
+              onClick={next}
               disabled={isLastQuestion}
               className="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 disabled:opacity-50"
             >
-              Next Question
+              Next
             </button>
             <button
               onClick={handleEnd}
@@ -139,9 +187,11 @@ export default function HostLivePage() {
             </button>
           </div>
         </div>
-        {/* <div className="w-[25%] h-full">
+
+        {/* Right: Leaderboard */}
+        <div className="w-[25%] h-full border-l border-neutral-800">
           <Leaderboard />
-        </div> */}
+        </div>
       </div>
     </div>
   )

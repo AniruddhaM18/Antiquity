@@ -27,6 +27,7 @@ export interface LiveQuestion {
   id: string
   question: string
   options: string[]
+  correct?: number  // Only available for hosts
 }
 
 export interface LiveContest {
@@ -43,6 +44,8 @@ interface LiveQuizStore {
   locked: boolean
   liveContestId: string | null
   contestId: string | null
+  leaderboardVersion: number
+    // Incrementing this triggers leaderboard refresh
 
   // actions
   setContest: (contest: LiveContest) => void
@@ -53,6 +56,9 @@ interface LiveQuizStore {
   setCurrentIndex: (index: number) => void
   setServerCurrentIndex: (index: number) => void
   lock: () => void
+  triggerLeaderboardRefresh: () => void
+  nextQuestion: () => void
+  endContest: () => void
 }
 
 export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
@@ -63,15 +69,23 @@ export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
   locked: false,
   liveContestId: null,
   contestId: null,
+  leaderboardVersion: 0,
 
   setContest(contest) {
-    set({
-      contest,
-      currentIndex: 0,
-      serverCurrentIndex: 0,
-      answers: {},
-      locked: false,
-    })
+    const state = get()
+    // Only reset navigation state on initial load (when no contest exists)
+    if (state.contest === null) {
+      set({
+        contest,
+        currentIndex: 0,
+        serverCurrentIndex: 0,
+        answers: {},
+        locked: false,
+      })
+    } else {
+      // Just update the contest, preserve navigation state
+      set({ contest })
+    }
   },
 
   setLiveIds(liveContestId, contestId) {
@@ -119,14 +133,32 @@ export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
     if (!contest) return
 
     if (index >= 0 && index < contest.questions.length) {
-      set({
-        serverCurrentIndex: index,
-        currentIndex: index,
-      })
+      // Only update serverCurrentIndex - don't touch currentIndex
+      // Participants navigate independently
+      set({ serverCurrentIndex: index })
     }
   },
 
   lock() {
     set({ locked: true })
   },
+
+  triggerLeaderboardRefresh() {
+    set((state) => ({ leaderboardVersion: state.leaderboardVersion + 1 }))
+  },
+  nextQuestion() {
+  const { contest, currentIndex } = get()
+  if (!contest) return
+
+  if (currentIndex < contest.questions.length - 1) {
+    set({ currentIndex: currentIndex + 1 })
+  }
+},
+
+endContest() {
+  set({
+    locked: true,
+  })
+},
+
 }))

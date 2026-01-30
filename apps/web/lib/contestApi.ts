@@ -44,28 +44,24 @@ export async function getCurrentQuestion(liveContestId: string) {
   return data;
 }
 
-// ✅ FIXED
 export async function submitLiveAnswer(liveContestId: string, selected: number) {
   const { data } = await api.post(`/live/${liveContestId}/respond`, { selected });
   if (!data.success) throw new Error(data.message || "Failed to submit");
   return data;
 }
 
-// ✅ FIXED
 export async function fetchLeaderboard(contestId: string) {
   const { data } = await api.get(`/participants/contests/${contestId}/leaderboard`);
   if (!data.success) throw new Error(data.message || "Failed to load leaderboard");
   return data;
 }
 
-// ✅ FIXED
 export async function moveToNextQuestion(liveContestId: string) {
   const { data } = await api.put(`/live/${liveContestId}/next`);
   if (!data.success) throw new Error(data.message || "Failed to move to next question");
   return data;
 }
 
-// ✅ FIXED
 export async function endLiveContest(liveContestId: string) {
   const { data } = await api.post(`/live/${liveContestId}/end`);
   if (!data.success) throw new Error(data.message || "Failed to end contest");
