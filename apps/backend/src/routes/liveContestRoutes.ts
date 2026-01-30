@@ -8,16 +8,24 @@ const liveContestRouter: Router = Router();
 
 //host controls - only contest creator
 liveContestRouter.post("/contest/:id/live/start", authMiddleware, requireContestHost, startLiveContest);
-liveContestRouter.put("/live/:liveContestId/next", authMiddleware, requireContestHost, moveToNextQuestion);
-liveContestRouter.post("/live/:liveContestId/end", authMiddleware, requireContestHost, endLiveContest);
+// liveContestRouter.put("/live/:liveContestId/next", authMiddleware, requireContestHost, moveToNextQuestion);
+// liveContestRouter.post("/live/:liveContestId/end", authMiddleware, requireContestHost, endLiveContest);
 
-//participant - members only, not creator
-liveContestRouter.get("/live/:liveContestId/current", authMiddleware, requireContestParticipant, getCurrentQuestion);
-liveContestRouter.get("/live/:liveContestId/status", authMiddleware, getLiveStatus); // anyone can view status
+// //participant - members only, not creator
+// liveContestRouter.get("/live/:liveContestId/current", authMiddleware, requireContestParticipant, getCurrentQuestion);
+// liveContestRouter.get("/live/:liveContestId/status", authMiddleware, getLiveStatus); // anyone can view status
 
-//responses - participants only (not creator)
-liveContestRouter.post("/live/:liveContestId/respond", authMiddleware, requireContestParticipant, submitAnswer);
-liveContestRouter.get("/live/:liveContestId/my-responses", authMiddleware, getMyResponse);
+// //responses - participants only (not creator)
+// liveContestRouter.post("/live/:liveContestId/respond", authMiddleware, requireContestParticipant, submitAnswer);
+// liveContestRouter.get("/live/:liveContestId/my-responses", authMiddleware, getMyResponse);
+
+
+liveContestRouter.put("/:liveContestId/next", authMiddleware, requireContestHost, moveToNextQuestion);
+liveContestRouter.post("/:liveContestId/end", authMiddleware, requireContestHost, endLiveContest);
+liveContestRouter.get("/:liveContestId/current", authMiddleware, requireContestParticipant, getCurrentQuestion);
+liveContestRouter.get("/:liveContestId/status", authMiddleware, getLiveStatus);
+liveContestRouter.post("/:liveContestId/respond", authMiddleware, requireContestParticipant, submitAnswer);
+liveContestRouter.get("/:liveContestId/my-responses", authMiddleware, getMyResponse);
 
 
 export default liveContestRouter;

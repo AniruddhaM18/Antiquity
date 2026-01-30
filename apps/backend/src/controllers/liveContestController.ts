@@ -202,12 +202,15 @@ export async function endLiveContest(req: Request, res: Response) {
 /////////////////////////FOR PARTICIPANTS ::::::::::::::
 
 //get current question participant
+//get current question participant
 export async function getCurrentQuestion(req: Request, res: Response) {
+      console.log("getCurrentQuestion called");
+    console.log("User:", req.user);
+    console.log("LiveContestId:", req.params.liveContestId);
     try {
         const { liveContestId } = req.params;
         const userId = req.user!.id;
 
-        // Get from Redis (no DB query!)
         const state = await liveContestStore.getByLiveId(liveContestId);
 
         if (!state) {
@@ -217,19 +220,29 @@ export async function getCurrentQuestion(req: Request, res: Response) {
             });
         }
 
-        // Check membership (from Redis)
-        if (!state.memberIds.includes(userId)) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not a member of this contest"
-            });
-        }
-
         // Prevent creator from participating
         if (state.createdBy === userId) {
             return res.status(403).json({
                 success: false,
                 message: "Contest creator cannot participate"
+            });
+        }
+
+        // Check membership: Redis first, then DB (for users who joined after start)
+        let isMember = state.memberIds.includes(userId);
+        if (!isMember) {
+            const member = await prisma.contestMember.findUnique({
+                where: {
+                    userId_contestId: { userId, contestId: state.contestId }
+                }
+            });
+            isMember = !!member && member.role === "participant";
+        }
+
+        if (!isMember) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this contest"
             });
         }
 
@@ -249,14 +262,12 @@ export async function getCurrentQuestion(req: Request, res: Response) {
             });
         }
 
-        // Check if already answered (from Redis)
         const existingResponse = await liveContestStore.getUserResponse(
             liveContestId,
             userId,
             state.currentIndex
         );
 
-        // Remove correct answer before sending
         const { correct, ...questionWithoutAnswer } = currentQuestion;
 
         return res.status(200).json({
@@ -276,56 +287,37 @@ export async function getCurrentQuestion(req: Request, res: Response) {
 }
 
 //get live contest status
+
 export async function getLiveStatus(req: Request, res: Response) {
   try {
-    // route param is :liveContestId (NOT :id)
     const { liveContestId } = req.params;
+    const state = await liveContestStore.getByLiveId(liveContestId);
 
-    const liveContest = await prisma.liveContest.findUnique({
-      where: { id: liveContestId },
-      include: {
-        contest: {
-          include: {
-            questions: true,
-            _count: {
-              select: { members: true },
-            },
-          },
-        },
-        _count: {
-          select: {
-            responses: true,
-          },
-        },
-      },
-    });
-
-    if (!liveContest) {
+    if (!state) {
       return res.status(404).json({
         success: false,
-        message: "contest not found",
+        message: "Contest not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       liveContest: {
-        id: liveContest.id,
-        contestId: liveContest.contestId,
-        currentIndex: liveContest.currentIndex,
-        totalQuestions: liveContest.contest.questions.length,
-        startedAt: liveContest.startedAt,
-        endedAt: liveContest.endedAt,
-        isActive: !liveContest.endedAt,
-        totalParticipants: liveContest.contest._count.members,
-        totalResponses: liveContest._count.responses,
+        id: state.liveContestId,
+        contestId: state.contestId,
+        currentIndex: state.currentIndex,
+        totalQuestions: state.questions.length,
+        startedAt: state.startedAt,
+        endedAt: state.endedAt ?? null,
+        isActive: !state.endedAt,
+        totalParticipants: state.memberIds.length,
       },
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).json({
       success: false,
-      message: "internal Server error",
+      message: "Internal server error",
     });
   }
 }

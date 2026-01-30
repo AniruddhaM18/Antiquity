@@ -26,19 +26,29 @@ export async function submitAnswer(req: Request, res: Response) {
             });
         }
 
-        // Check membership (from Redis)
-        if (!state.memberIds.includes(userId)) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not a member of this contest"
-            });
-        }
-
-        // Prevent creator from participating
+// Prevent creator from participating
         if (state.createdBy === userId) {
             return res.status(403).json({
                 success: false,
                 message: "Contest creator cannot participate"
+            });
+        }
+
+        // Check membership: Redis first, then DB (for users who joined after start)
+        let isMember = state.memberIds.includes(userId);
+        if (!isMember) {
+            const member = await prisma.contestMember.findUnique({
+                where: {
+                    userId_contestId: { userId, contestId: state.contestId }
+                }
+            });
+            isMember = !!member && member.role === "participant";
+        }
+
+        if (!isMember) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this contest"
             });
         }
 

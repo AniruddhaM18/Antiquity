@@ -296,13 +296,21 @@ export async function addQuestion(req: Request, res: Response) {
 }
 
 
+///helper to check if string is join code //helper ae ji 
+function isJoinCode(value: string): boolean {
+  return /^[A-Z0-9]{4,10}$/i.test(value.trim())
+}
+
 // GET SINGLE CONTEST
+// GET SINGLE CONTEST (by ID or Join Code)
 export async function getContest(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { id } = req.params
 
-    const contest = await prisma.contest.findUnique({
-      where: { id },
+    const contest = await prisma.contest.findFirst({
+      where: isJoinCode(id)
+        ? { joinCode: id.toUpperCase().trim() }
+        : { id },
       include: {
         questions: {
           orderBy: { id: "asc" },
@@ -311,7 +319,7 @@ export async function getContest(req: Request, res: Response) {
             question: true,
             options: true,
             points: true,
-            // NOTE: correct is intentionally excluded here for participants
+            // correct intentionally hidden for participants
           },
         },
         members: {
@@ -326,29 +334,28 @@ export async function getContest(req: Request, res: Response) {
           },
         },
       },
-    });
+    })
 
     if (!contest) {
       return res.status(404).json({
         success: false,
         message: "Contest not found",
-      });
+      })
     }
 
-    const isHost = contest.createdBy === req.user?.id;
+    const isHost = contest.createdBy === req.user?.id
 
-    // Live info is from Redis (ephemeral)
-    const liveState = await liveContestStore.getByContestId(id);
-    const isLive = !!liveState && !liveState.endedAt;
+    // Live state from Redis (ephemeral)
+    const liveState = await liveContestStore.getByContestId(contest.id)
+    const isLive = !!liveState && !liveState.endedAt
 
-    // If host, fetch full questions including `correct`
-    // (keeping your original behavior: host sees answers)
-    let hostQuestions: any[] | undefined;
+    // Host sees full questions (including correct)
+    let hostQuestions: any[] | undefined
     if (isHost) {
       hostQuestions = await prisma.question.findMany({
-        where: { contestId: id },
+        where: { contestId: contest.id },
         orderBy: { id: "asc" },
-      });
+      })
     }
 
     return res.status(200).json({
@@ -367,23 +374,28 @@ export async function getContest(req: Request, res: Response) {
       },
       isHost,
       isLive,
-    });
+    })
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching contest", err)
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-    });
+    })
   }
 }
 
 // GET ALL CONTESTS
+// Replace the existing getAllContests function (around lines 387–434) with:
+
+// GET ALL CONTESTS
 export async function getAllContests(req: Request, res: Response) {
   try {
-    const { my, limit = "20", offset = "0" } = req.query
+    const { my, created, limit = "20", offset = "0" } = req.query
     const where: any = {}
 
-    if (my === "true" && req.user) {
+    if (created === "true" && req.user) {
+      where.createdBy = req.user.id
+    } else if (my === "true" && req.user) {
       where.members = {
         some: { userId: req.user.id },
       }
@@ -426,7 +438,6 @@ export async function getAllContests(req: Request, res: Response) {
     })
   }
 }
-
 // DELETE CONTEST
 export async function deleteContest(req: Request, res: Response) {
   try {

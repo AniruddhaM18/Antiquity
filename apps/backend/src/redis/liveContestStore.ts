@@ -84,23 +84,25 @@ export class LiveContestStore {
     }
 
     //move to next question - atomic operation
-    async nextQuestion(contestId: string): Promise<number | null> {
-        const state = await this.getByContestId(contestId);
-        if (!state || !state.endedAt) return null;
+// In nextQuestion, change the condition from:
+// if (!state || !state.endedAt) return null;
+// to:
+async nextQuestion(contestId: string): Promise<number | null> {
+  const state = await this.getByContestId(contestId);
+  if (!state || state.endedAt) return null;
 
-        if (state.currentIndex + 1 >= state.questions.length) {
-            return null //no more questions
-        }
+  if (state.currentIndex + 1 >= state.questions.length) {
+    return null;
+  }
 
-        //updat currentIndex atomically 
-        state.currentIndex++;
-        await redis.setex(
-            KEYS.contest(contestId),
-            CONTEST_TTL,
-            JSON.stringify(state)
-        );
-        return state.currentIndex;
-    }
+  state.currentIndex++;
+  await redis.setex(
+    KEYS.contest(contestId),
+    CONTEST_TTL,
+    JSON.stringify(state)
+  );
+  return state.currentIndex;
+}
 
     //end contest
     async end(contestId: string): Promise<String | null> {
