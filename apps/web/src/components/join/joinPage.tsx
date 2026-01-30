@@ -30,7 +30,7 @@ export default function JoinPage() {
   const params = useParams();
   const router = useRouter();
   const joinCode = (params?.id as string)?.toUpperCase?.()?.trim();
-  const [useDummy] = useState(true);
+  const [useDummy] = useState(false);
 
   const [state, setState] = useState<JoinState>("loading");
   const [contest, setContest] = useState<Contest | null>(null);

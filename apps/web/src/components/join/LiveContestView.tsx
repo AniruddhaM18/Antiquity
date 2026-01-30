@@ -15,17 +15,12 @@ type LiveContestViewProps = {
 export default function LiveContestView({ contestId, liveContestId, contest }: LiveContestViewProps) {
   const setContest = useLiveQuizStore((s) => s.setContest);
   const setLiveIds = useLiveQuizStore((s) => s.setLiveIds);
-  const setCurrentIndex = useLiveQuizStore((s) => s.setCurrentIndex);
-  const lock = useLiveQuizStore((s) => s.lock);
-  const answers = useLiveQuizStore((s) => s.answers);
-  const locked = useLiveQuizStore((s) => s.locked);
-  const contestFromStore = useLiveQuizStore((s) => s.contest);
-  const currentIndex = useLiveQuizStore((s) => s.currentIndex);
   const setServerCurrentIndex = useLiveQuizStore((s) => s.setServerCurrentIndex);
 
-
   const [ready, setReady] = useState(false);
+  const [finished, setFinished] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const submittedQuestions = useRef<Set<string>>(new Set());
 
   // One-time: set store from contest
   useEffect(() => {
@@ -43,7 +38,7 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
     setReady(true);
   }, [contest.id, contest.title, contest.questions, contestId, liveContestId, setContest, setLiveIds]);
 
-  // Poll current question index (host moves questions)
+  // Poll to check server state (optional - for sync purposes)
   useEffect(() => {
     if (!ready || !liveContestId) return;
 
@@ -51,35 +46,61 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
       getCurrentQuestion(liveContestId)
         .then((data) => {
           if (typeof data.questionIndex === "number") {
-            setCurrentIndex(data.questionIndex);
-          }
-          if (data.alreadyAnswered) {
-            lock();
+            setServerCurrentIndex(data.questionIndex);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     poll();
-    pollRef.current = setInterval(poll, 2000);
+    pollRef.current = setInterval(poll, 5000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [liveContestId, ready, setCurrentIndex, lock]);
+  }, [liveContestId, ready, setServerCurrentIndex]);
 
-  // Wire Submit Answer to API: send current answer then lock
-  const handleSubmitAnswer = useCallback(() => {
+  // Submit individual question answer (called when user clicks Next)
+  const handleSubmitAnswer = useCallback((questionId: string, optionIndex: number) => {
     if (!liveContestId) return;
-    const q = useLiveQuizStore.getState().contest?.questions?.[useLiveQuizStore.getState().currentIndex];
-    if (!q) return;
-    const selected = useLiveQuizStore.getState().answers[q.id];
-    if (selected === undefined) return;
-    submitLiveAnswer(liveContestId, selected).catch(() => {}).finally(() => {
-      useLiveQuizStore.getState().lock();
-    });
+    // Avoid submitting the same question twice
+    if (submittedQuestions.current.has(questionId)) return;
+
+    submittedQuestions.current.add(questionId);
+
+    submitLiveAnswer(liveContestId, optionIndex)
+      .then(() => {
+        // Trigger leaderboard refresh after successful submission
+        useLiveQuizStore.getState().triggerLeaderboardRefresh();
+      })
+      .catch(() => {
+        // Remove from submitted set if failed, so user can retry
+        submittedQuestions.current.delete(questionId);
+      });
   }, [liveContestId]);
+
+  // Finish quiz (called when user clicks Submit Quiz on last question)
+  const handleFinishQuiz = useCallback(() => {
+    setFinished(true);
+  }, []);
 
   if (!ready) return null;
 
-  return <NewLivePage onSubmitAnswer={handleSubmitAnswer} />;
+  // Show completion screen when finished
+  if (finished) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-white mb-4">Quiz Completed!</h1>
+          <p className="text-neutral-400 mb-6">Thank you for participating. Check the leaderboard for your results.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <NewLivePage
+      onSubmitAnswer={handleSubmitAnswer}
+      onFinishQuiz={handleFinishQuiz}
+    />
+  );
 }

@@ -5,8 +5,10 @@ import { useLiveQuizStore } from "@/src/store/LiveQuestionStore"
 import LiveQuestionNavigation from "./LiveQuestionNavigation"
 
 type Props = {
-  /** When provided, called when user clicks Submit Answer (e.g. to send to API). */
-  onSubmitAnswer?: () => void
+  /** Called when user moves to next question (submits current answer). */
+  onSubmitAnswer?: (questionId: string, optionIndex: number) => void
+  /** Called when user finishes the quiz (clicks Submit Quiz on last question). */
+  onFinishQuiz?: () => void
 }
 
 export const dummyLiveQuestion = {
@@ -15,7 +17,7 @@ export const dummyLiveQuestion = {
   options: ["Mumbai", "Delhi", "Kolkata", "Chennai"],
 }
 
-export default function NewLivePage({ onSubmitAnswer }: Props) {
+export default function NewLivePage({ onSubmitAnswer, onFinishQuiz }: Props) {
   const contest = useLiveQuizStore((s) => s.contest)
   const currentIndex = useLiveQuizStore((s) => s.currentIndex)
 
@@ -44,7 +46,10 @@ export default function NewLivePage({ onSubmitAnswer }: Props) {
 
         {/* Navigation - fixed at bottom */}
         <div className="flex-shrink-0">
-          <LiveQuestionNavigation onSubmitAnswer={onSubmitAnswer} />
+          <LiveQuestionNavigation
+            onSubmitAnswer={onSubmitAnswer}
+            onFinishQuiz={onFinishQuiz}
+          />
         </div>
       </div>
 

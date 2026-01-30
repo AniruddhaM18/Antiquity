@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchUserContests } from "@/lib/contestApi";
+import { fetchMyContests } from "@/lib/contestApi";
 import CreatedContestCard, { Contest } from "./createdContestCard";
 
 export default function CreatedContestsSection() {
@@ -11,7 +11,7 @@ export default function CreatedContestsSection() {
   useEffect(() => {
     async function load() {
       try {
-        const all = await fetchUserContests();
+        const all = await fetchMyContests();
         setContests(all);
       } finally {
         setLoading(false);

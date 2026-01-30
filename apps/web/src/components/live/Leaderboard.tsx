@@ -17,9 +17,10 @@ type Player = {
 
 export default function Leaderboard() {
   const contestId = useLiveQuizStore((s) => s.contestId);
+  const leaderboardVersion = useLiveQuizStore((s) => s.leaderboardVersion);
   const [players, setPlayers] = useState<Player[]>([]);
 
-useEffect(() => {
+  useEffect(() => {
     if (!contestId) return;
     // Skip leaderboard for dummy/test contest (no such contest in DB)
     if (contestId === "dummy-contest-123") return;
@@ -34,13 +35,13 @@ useEffect(() => {
           }));
           setPlayers(list);
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     load();
     const interval = setInterval(load, 3000);
     return () => clearInterval(interval);
-  }, [contestId]);
+  }, [contestId, leaderboardVersion]); // Added leaderboardVersion - triggers refresh on answer submit
 
   const rankStyles = (index: number) => {
     if (index === 0) return "border-orange-400 bg-orange-400/10 text-orange-400";

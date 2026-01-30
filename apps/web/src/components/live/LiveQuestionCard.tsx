@@ -5,6 +5,7 @@ import { FaCheck } from "react-icons/fa";
 type Props = {
   question: LiveQuestion
   index: number
+  readonly?: boolean
 }
 
 export default function LiveQuestionCard({ question, index }: Props) {
