@@ -1,6 +1,7 @@
 import { prisma } from "@repo/database";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { liveContestStore } from "../redis/liveContestStore.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -42,7 +43,6 @@ export async function requireContestHost(
   res: Response,
   next: NextFunction
 ) {
-  const contestId = req.params.id || req.body.contestId;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -52,14 +52,29 @@ export async function requireContestHost(
     });
   }
 
-  if (!contestId) {
-    return res.status(400).json({
-      success: false,
-      message: "Contest ID missing",
-    });
-  }
-
   try {
+    // Support both regular contest routes (:id) and live contest routes (:liveContestId)
+    let contestId = req.params.id || req.body?.contestId;
+
+    // If we have a liveContestId instead, look up the contestId from Redis
+    if (!contestId && req.params.liveContestId) {
+      const state = await liveContestStore.getByLiveId(req.params.liveContestId);
+      if (!state) {
+        return res.status(404).json({
+          success: false,
+          message: "Live contest not found",
+        });
+      }
+      contestId = state.contestId;
+    }
+
+    if (!contestId) {
+      return res.status(400).json({
+        success: false,
+        message: "Contest ID missing",
+      });
+    }
+
     const contest = await prisma.contest.findUnique({
       where: { id: contestId },
     });
@@ -80,7 +95,7 @@ export async function requireContestHost(
 
     next();
   } catch (error) {
-    console.error("requireContestHost error 👉", error);
+    console.error("requireContestHost error:", error);
     return res.status(500).json({
       success: false,
       message: "Error checking permissions",
@@ -90,6 +105,9 @@ export async function requireContestHost(
 
 // Check if user can participate (not the host of the contest)
 // Check if user can participate (not the host & must be a member)
+
+
+// Replace requireContestParticipant with:
 export async function requireContestParticipant(
   req: Request,
   res: Response,
@@ -101,61 +119,65 @@ export async function requireContestParticipant(
   if (!userId) {
     return res.status(401).json({
       success: false,
-      message: "Unauthorized"
-    });
-  }
-
-  if (!liveContestId) {
-    return res.status(400).json({
-      success: false,
-      message: "Live contest ID missing"
+      message: "Unauthorized",
     });
   }
 
   try {
-    const liveContest = await prisma.liveContest.findUnique({
-      where: { id: liveContestId },
-      include: {
-        contest: {
-          include: {
-            members: {
-              where: { userId }
-            }
-          }
-        }
-      }
-    });
+    const state = await liveContestStore.getByLiveId(liveContestId);
 
-    if (!liveContest) {
+    if (!state) {
       return res.status(404).json({
         success: false,
-        message: "Live contest not found"
+        message: "Live contest not found",
       });
     }
 
-    //host cannot participate
-    if (liveContest.contest.createdBy === userId) {
+    console.log("🔍 Checking membership for:", userId);
+    console.log("   ContestId:", state.contestId);
+
+    if (state.createdBy === userId) {
       return res.status(403).json({
         success: false,
-        message: "Contest creator cannot participate"
+        message: "Contest creator cannot participate",
       });
     }
 
-    // must be a member
-    if (liveContest.contest.members.length === 0) {
+    // Check Redis first
+    let isMember = state.memberIds.includes(userId);
+    console.log("   In Redis?", isMember);
+
+    if (!isMember) {
+      // Check database
+      console.log("   Checking database...");
+      const member = await prisma.contestMember.findUnique({
+        where: {
+          userId_contestId: {
+            userId,
+            contestId: state.contestId
+          }
+        }
+      });
+      console.log("DB result:", member);
+      isMember = !!member && member.role === "participant";
+      console.log("   Is valid participant?", isMember);
+    }
+
+    if (!isMember) {
+      console.log("BLOCKED: Not a member");
       return res.status(403).json({
         success: false,
-        message: "You are not a participant in this contest"
+        message: "You are not a participant in this contest",
       });
     }
 
-    // allowed
+    console.log("ALLOWED");
     next();
   } catch (error) {
     console.error("requireContestParticipant error:", error);
     return res.status(500).json({
       success: false,
-      message: "Error checking permissions"
+      message: "Error checking permissions",
     });
   }
 }
