@@ -4,42 +4,53 @@ import QuestionsPallate from "./QuestionsPallate"
 import { useLiveQuizStore } from "@/src/store/LiveQuestionStore"
 import LiveQuestionNavigation from "./LiveQuestionNavigation"
 
-// dummyLiveQuestion
+type Props = {
+  /** When provided, called when user clicks Submit Answer (e.g. to send to API). */
+  onSubmitAnswer?: () => void
+}
+
 export const dummyLiveQuestion = {
   id: "q1",
   question: "What is the capital of India?",
   options: ["Mumbai", "Delhi", "Kolkata", "Chennai"],
 }
-export default function NewLivePage() {
 
-    const contest = useLiveQuizStore(s => s.contest)
-const currentIndex = useLiveQuizStore(s => s.currentIndex)
+export default function NewLivePage({ onSubmitAnswer }: Props) {
+  const contest = useLiveQuizStore((s) => s.contest)
+  const currentIndex = useLiveQuizStore((s) => s.currentIndex)
 
   return (
-    <div className="w-screen h-screen bg-neutral-950">
-      <div className="flex w-full h-full">
-        
-        <div className="w-[20%] h-full">
-          <QuestionsPallate />
+    <div className="w-screen h-full bg-neutral-950 flex">
+      {/* Left: Questions Palette */}
+      <div className="w-[20%] h-full border-r border-neutral-800">
+        <QuestionsPallate />
+      </div>
+
+      {/* Center: Question Card + Navigation */}
+      <div className="w-[55%] h-full flex flex-col">
+        {/* Question area - takes remaining space */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {contest && contest.questions[currentIndex] ? (
+            <LiveQuestionCard
+              question={contest.questions[currentIndex]}
+              index={currentIndex}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-neutral-400">
+              Loading question...
+            </div>
+          )}
         </div>
 
-<div className="w-[55%] h-full flex flex-col">
-  <div className="flex-1 overflow-y-auto">
-    {contest && (
-      <LiveQuestionCard
-        question={contest.questions[currentIndex]}
-        index={currentIndex}
-      />
-    )}
-  </div>
-
-  <LiveQuestionNavigation />
-</div>
-
-        <div className="w-[25%] h-full">
-          <Leaderboard />
+        {/* Navigation - fixed at bottom */}
+        <div className="flex-shrink-0">
+          <LiveQuestionNavigation onSubmitAnswer={onSubmitAnswer} />
         </div>
+      </div>
 
+      {/* Right: Leaderboard */}
+      <div className="w-[25%] h-full border-l border-neutral-800">
+        <Leaderboard />
       </div>
     </div>
   )

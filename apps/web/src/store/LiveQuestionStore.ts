@@ -23,22 +23,22 @@ const mockContest = {
   ],
 }
 
-
 export interface LiveQuestion {
-    id: string,
-    question: string,
-    options: string[]
+  id: string
+  question: string
+  options: string[]
 }
 
 export interface LiveContest {
-    id: string,
-    title: string, 
-    questions: LiveQuestion[]
+  id: string
+  title: string
+  questions: LiveQuestion[]
 }
 
 interface LiveQuizStore {
   contest: LiveContest | null
   currentIndex: number
+  serverCurrentIndex: number
   answers: Record<string, number>
   locked: boolean
   liveContestId: string | null
@@ -51,20 +51,27 @@ interface LiveQuizStore {
   next: () => void
   previous: () => void
   setCurrentIndex: (index: number) => void
+  setServerCurrentIndex: (index: number) => void
   lock: () => void
 }
-
 
 export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
   contest: null,
   currentIndex: 0,
+  serverCurrentIndex: 0,
   answers: {},
   locked: false,
   liveContestId: null,
   contestId: null,
 
   setContest(contest) {
-    set({ contest, currentIndex: 0, answers: {}, locked: false })
+    set({
+      contest,
+      currentIndex: 0,
+      serverCurrentIndex: 0,
+      answers: {},
+      locked: false,
+    })
   },
 
   setLiveIds(liveContestId, contestId) {
@@ -104,6 +111,18 @@ export const useLiveQuizStore = create<LiveQuizStore>((set, get) => ({
 
     if (index >= 0 && index < contest.questions.length) {
       set({ currentIndex: index })
+    }
+  },
+
+  setServerCurrentIndex(index) {
+    const { contest } = get()
+    if (!contest) return
+
+    if (index >= 0 && index < contest.questions.length) {
+      set({
+        serverCurrentIndex: index,
+        currentIndex: index,
+      })
     }
   },
 
