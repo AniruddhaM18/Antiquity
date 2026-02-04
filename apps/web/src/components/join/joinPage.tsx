@@ -7,10 +7,12 @@ import JoinLoader from "@/src/components/join/loader";
 import ContestInfo from "@/src/components/join/contestInfo";
 import WaitingRoom from "@/src/components/join/waitingRoom";
 import LiveContestView from "@/src/components/join/LiveContestView";
+import Leaderboard from "@/src/components/live/Leaderboard";
 import { fetchContest, joinContestByCode } from "@/lib/contestApi";
 import { Contest } from "@/src/components/types";
+import { useLiveQuizStore } from "@/src/store/LiveQuestionStore";
 
-type JoinState = "loading" | "form" | "joined" | "waiting" | "live" | "error";
+type JoinState = "loading" | "form" | "joined" | "waiting" | "live" | "ended" | "error";
 
 const DUMMY_CONTEST: Contest = {
   id: "dummy-contest-123",
@@ -72,13 +74,19 @@ export default function JoinPage() {
         }
 
         const c = data.contest;
-        const isLive = !!data.isLive && !!c?.live?.id && !c?.live?.endedAt;
+        const hasLive = !!c?.live?.id;
+        const isEnded = hasLive && !!c?.live?.endedAt;
+        const isLive = hasLive && !isEnded;
         const memberCheck = c?.members?.some((m: any) => m.userId === data.userId);
 
         if (memberCheck) {
           setContest(c);
           setIsMember(true);
-          setState(isLive ? "live" : "waiting");
+          // Set liveIds for leaderboard  
+          if (c?.live?.id) {
+            useLiveQuizStore.getState().setLiveIds(c.live.id, c.id);
+          }
+          setState(isEnded ? "ended" : isLive ? "live" : "waiting");
           return;
         }
 
@@ -88,8 +96,14 @@ export default function JoinPage() {
           if (joinData.success) {
             setContest((prev) => (prev ? { ...prev, ...joinData.contest } : { ...c, ...joinData.contest }));
             setIsMember(true);
-            const nextLive = !!data.isLive && !!c?.live?.id && !c?.live?.endedAt;
-            setState(nextLive ? "live" : "waiting");
+            // Set liveIds for leaderboard
+            if (c?.live?.id) {
+              useLiveQuizStore.getState().setLiveIds(c.live.id, c.id);
+            }
+            const hasLiveSession = !!c?.live?.id;
+            const isContestEnded = hasLiveSession && !!c?.live?.endedAt;
+            const nextLive = hasLiveSession && !isContestEnded;
+            setState(isContestEnded ? "ended" : nextLive ? "live" : "waiting");
           } else {
             setError(joinData.message || "Failed to join");
             setState("error");
@@ -103,8 +117,14 @@ export default function JoinPage() {
             if (refetch.success && refetch.contest) {
               setContest(refetch.contest);
               setIsMember(true);
-              const isLiveNow = !!refetch.isLive && !!refetch.contest?.live?.id && !refetch.contest?.live?.endedAt;
-              setState(isLiveNow ? "live" : "waiting");
+              // Set liveIds for leaderboard
+              if (refetch.contest?.live?.id) {
+                useLiveQuizStore.getState().setLiveIds(refetch.contest.live.id, refetch.contest.id);
+              }
+              const hasLiveNow = !!refetch.contest?.live?.id;
+              const isEndedNow = hasLiveNow && !!refetch.contest?.live?.endedAt;
+              const isLiveNow = hasLiveNow && !isEndedNow;
+              setState(isEndedNow ? "ended" : isLiveNow ? "live" : "waiting");
             } else {
               setError("Could not load contest");
               setState("error");
@@ -141,6 +161,34 @@ export default function JoinPage() {
               className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded text-sm text-red-400 transition"
             >
               Go Back Home
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show leaderboard when contest has ended
+  if (state === "ended" && contest) {
+    return (
+      <div className="h-screen bg-neutral-950 flex flex-col overflow-hidden">
+        <JoinNavbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
+          <div className="w-full max-w-lg">
+            <h1 className="text-2xl font-bold text-white text-center mb-2">
+              Contest Ended
+            </h1>
+            <p className="text-neutral-400 text-center mb-6">
+              {contest.title}
+            </p>
+            <div className="h-[400px] mb-6">
+              <Leaderboard />
+            </div>
+            <button
+              onClick={() => router.push("/home")}
+              className="w-full px-4 py-3 rounded bg-orange-600 hover:bg-orange-500 text-white font-medium transition"
+            >
+              Go to Dashboard
             </button>
           </div>
         </main>

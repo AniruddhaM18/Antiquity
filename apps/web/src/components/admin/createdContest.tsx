@@ -8,19 +8,19 @@ export default function CreatedContestsSection() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const all = await fetchCreatedContests();
-        setContests(all);
-      } catch (err) {
-        console.error("Failed to load contests", err);
-      } finally {
-        setLoading(false);
-      }
+  const loadContests = async () => {
+    try {
+      const all = await fetchCreatedContests();
+      setContests(all);
+    } catch (err) {
+      console.error("Failed to load contests", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    load();
+  useEffect(() => {
+    loadContests();
   }, []);
 
   if (loading) {
@@ -41,6 +41,7 @@ export default function CreatedContestsSection() {
         <CreatedContestCard
           key={contest.id}
           contest={contest}
+          onDelete={loadContests}
         />
       ))}
     </div>

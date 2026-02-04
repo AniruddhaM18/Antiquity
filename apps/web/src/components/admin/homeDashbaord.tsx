@@ -8,7 +8,7 @@ import ContestSection from "./contestSection";
 export default function HomeDashboard() {
   return (
     <div className="p-6 space-y-6">
-       <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-neutral-100">
           Home
         </h1>
@@ -37,7 +37,7 @@ export default function HomeDashboard() {
         </div>
       </div>
 
- 
+
       <ContestSection />
     </div>
   );
