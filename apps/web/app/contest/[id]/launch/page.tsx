@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { startLiveContest } from "@/lib/contestApi"
-import { fetchContest } from "@/lib/contestApi"
+import { startLiveContest, fetchContest } from "@/lib/contestApi"
 
 export default function LaunchQuizPage() {
   const { id } = useParams()
@@ -17,6 +16,24 @@ export default function LaunchQuizPage() {
 
     const start = async () => {
       try {
+        // First check if contest is already live
+        const contestData = await fetchContest(id)
+        const live = contestData.contest?.live
+
+        // If already live and not ended, redirect to host page
+        if (live?.id && !live?.endedAt) {
+          router.replace(`/live/host/${live.id}?contestId=${id}`)
+          return
+        }
+
+        // If ended, show error and redirect
+        if (live?.id && live?.endedAt) {
+          setError("This contest has already ended")
+          setStatus("error")
+          return
+        }
+
+        // Otherwise, try to start the contest
         const data = await startLiveContest(id)
         if (data.success && data.liveContest?.id) {
           const res = await fetchContest(id)
@@ -28,7 +45,21 @@ export default function LaunchQuizPage() {
         setError(data.message || "Failed to start")
         setStatus("error")
       } catch (err: any) {
-        setError(err.response?.data?.message || err.message || "Failed to launch")
+        const msg = err.response?.data?.message || err.message || "Failed to launch"
+        // Check if the error is because contest is already live
+        if (msg.toLowerCase().includes("already live")) {
+          try {
+            const contestData = await fetchContest(id)
+            const live = contestData.contest?.live
+            if (live?.id && !live?.endedAt) {
+              router.replace(`/live/host/${live.id}?contestId=${id}`)
+              return
+            }
+          } catch {
+            // Fall through to error
+          }
+        }
+        setError(msg)
         setStatus("error")
       }
     }

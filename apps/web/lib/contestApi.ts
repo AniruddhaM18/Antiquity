@@ -62,8 +62,20 @@ export async function moveToNextQuestion(liveContestId: string) {
   return data;
 }
 
+export async function fetchMyResponses(liveContestId: string) {
+  const { data } = await api.get(`/live/${liveContestId}/my-responses`);
+  if (!data.success) throw new Error(data.message || "Failed to load responses");
+  return data;
+}
+
 export async function endLiveContest(liveContestId: string) {
   const { data } = await api.post(`/live/${liveContestId}/end`);
   if (!data.success) throw new Error(data.message || "Failed to end contest");
+  return data;
+}
+
+export async function deleteContest(contestId: string) {
+  const { data } = await api.delete(`/contests/delete/${contestId}`);
+  if (!data.success) throw new Error(data.message || "Failed to delete contest");
   return data;
 }

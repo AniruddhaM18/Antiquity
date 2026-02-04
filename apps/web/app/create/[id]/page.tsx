@@ -25,7 +25,7 @@ export default function CreatePage() {
   useEffect(() => {
     if (!contestId) return
 
-    const fetchContest = async () => {
+    const fetchContestData = async () => {
       const token = localStorage.getItem("token")
 
       if (!token) {
@@ -40,6 +40,13 @@ export default function CreatePage() {
           process.env.NEXT_PUBLIC_BACKEND_URL ||
           "http://localhost:3001/api"
         const { data } = await api.get(`/contests/get/${contestId}`);
+
+        // Check if user is the host
+        if (!data.isHost) {
+          setError("Access denied: Only the contest host can edit this quiz")
+          setTimeout(() => router.push("/home"), 2000)
+          return
+        }
 
         if (data.success) {
           setTitle(data.contest.title)
@@ -75,14 +82,14 @@ export default function CreatePage() {
       }
     }
 
-    fetchContest()
+    fetchContestData()
   }, [contestId, router])
 
   // QUESTION OPERATIONS
   function addQuestion() {
     const newQuestion: QuestionValue = {
       id: nanoid(),
-      text: "",
+      question: "",
       options: ["", "", "", ""],
       correct: 0,
       points: 10,
@@ -206,7 +213,7 @@ export default function CreatePage() {
               >
                 <div className="flex items-center justify-between">
                   <span>Question {i + 1}</span>
-                  {q.text && (
+                  {q.question && (
                     <span className="text-xs text-green-500">✓</span>
                   )}
                 </div>

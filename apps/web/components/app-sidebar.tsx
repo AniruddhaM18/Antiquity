@@ -1,6 +1,6 @@
 "use client";
 
-
+import { useRouter } from "next/navigation";
 import {
   Sidebar,
   SidebarHeader,
@@ -16,16 +16,18 @@ import {
 import LogoIcon from "./ui/logo";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { HiOutlineRectangleStack } from "react-icons/hi2";
-import { MdOutlineSettings } from "react-icons/md";
+import { MdLogout } from "react-icons/md";
 import { FiHome } from "react-icons/fi";
 import { PiTrophyBold } from "react-icons/pi";
 
-
-
-
-
-
 export function AppSidebar() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/");
+  };
+
   return (
     <Sidebar
       collapsible="icon"
@@ -105,13 +107,11 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-neutral-800">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="/settings">
-                <MdOutlineSettings className="size-4 shrink-0" />
-                <span className="group-data-[collapsible=icon]:hidden">
-                  Settings
-                </span>
-              </a>
+            <SidebarMenuButton onClick={handleLogout} className="cursor-pointer">
+              <MdLogout className="size-4 shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">
+                Logout
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -119,3 +119,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+

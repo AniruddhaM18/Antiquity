@@ -48,6 +48,24 @@ export default function HostLivePage() {
           return
         }
         const c = res.contest
+
+        // Check if contest has already ended
+        if (c.live?.endedAt) {
+          setContest(c)
+          setHasEnded(true)
+          // Set live IDs for leaderboard
+          const questions = (c.questions || []).map((q: any) => ({
+            id: q.id,
+            question: q.question,
+            options: Array.isArray(q.options) ? q.options : [],
+            correct: q.correct ?? 0,
+          }))
+          setContestStore({ id: c.id, title: c.title, questions })
+          setLiveIds(liveContestId, c.id)
+          setLoading(false)
+          return
+        }
+
         if (!c.live?.id || c.live.id !== liveContestId) {
           setError("Contest not live or session mismatch")
           setLoading(false)
@@ -62,6 +80,11 @@ export default function HostLivePage() {
         }))
         setContestStore({ id: c.id, title: c.title, questions })
         setLiveIds(liveContestId, c.id)
+
+        // Restore current index from server state for host re-entry
+        if (typeof c.live?.currentIndex === "number" && c.live.currentIndex > 0) {
+          useLiveQuizStore.getState().setCurrentIndex(c.live.currentIndex)
+        }
       } catch (e) {
         if (!cancelled) setError("Failed to load contest")
       } finally {
