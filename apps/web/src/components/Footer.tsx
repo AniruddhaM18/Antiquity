@@ -23,7 +23,7 @@ export default function Footer() {
       from-[#ea580c]/25
       via-[#c2410c]/15
       to-black
-      border-t border-orange-900/40
+      border-t border-neutral-900/10
     ">
       <div className="max-w-7xl mx-auto px-6">
 
