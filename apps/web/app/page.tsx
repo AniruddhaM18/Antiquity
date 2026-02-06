@@ -1,5 +1,4 @@
 "use client";
-
 import { Navbar } from "@/src/components/Navbar";
 import Footer from "@/src/components/Footer";
 import Link from "next/link";
@@ -8,6 +7,8 @@ import Beams from "@/src/components/Beams";
 import { FeaturesBento } from "@/src/components/FeaturesBento";
 import BentoGridDeck from "@/src/components/ui/bento-grid";
 import WorksDeck from "@/src/components/ui/work-grid";
+import LenisComponent from "@/src/components/Lenis";
+import { CanvasRevealEffectDemo } from "@/src/components/canvasCards";
 
 export default function Home() {
   return (
@@ -24,18 +25,16 @@ export default function Home() {
           rotation={160}
         />
       </div>
-
       {/* FOREGROUND */}
       <div className="relative z-10">
         <Navbar />
         <div className="pt-10">
-        <HeroSection />
+          <HeroSection />
         </div>
       </div>
-
       {/* FEATURES SECTION */}
       <section className="max-w-6xl mx-auto px-6 py-36">
-        <div className="text-center mb-16">
+        <div className="text-center mb-4">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-100">
             Everything you need to engage
           </h2>
@@ -43,10 +42,11 @@ export default function Home() {
             Powerful features designed to make your contests interactive and memorable
           </p>
         </div>
-
-       <BentoGridDeck />
+        <div className="w-full h-screen">
+          <LenisComponent />
+        </div>
+        {/* <BentoGridDeck /> */}
       </section>
-
       {/* HOW IT WORKS */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
@@ -57,7 +57,8 @@ export default function Home() {
             Three simple steps to engage your audience
           </p>
         </div>
-        <WorksDeck />
+        {/* <WorksDeck /> */}
+        <CanvasRevealEffectDemo />
       </section>
       <Footer />
     </div>
