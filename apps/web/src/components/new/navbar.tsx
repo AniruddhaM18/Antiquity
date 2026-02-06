@@ -1,14 +1,19 @@
 "use client"
 
 import LogoIcon from "@/components/ui/logo"
-import { FiPlus } from "react-icons/fi"
-import { CiPlay1 } from "react-icons/ci"
+import { FiPlay, FiPlus } from "react-icons/fi"
+import { BsSave } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { useQuestionStore } from "@/src/store/useQuestionStore"
 import { useState } from "react"
 import { startLiveContest, fetchContest } from "@/lib/contestApi"
 import { useRouter } from "next/navigation"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { CiSaveDown2 } from "react-icons/ci";
+import { CiPlay1 } from "react-icons/ci";
+
+
 
 export default function NewNavbar() {
   const router = useRouter()
@@ -115,20 +120,30 @@ export default function NewNavbar() {
         {/* Right */}
         <div className="ml-auto flex items-center">
           {joinCode && (
-            <div
-              onClick={copyCode}
-              title="Click to copy"
-              className="mr-2 px-3 py-1.5 text-xs cursor-pointer rounded border border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20"
-            >
-              Join Code: <span className="font-semibold">{joinCode}</span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    onClick={copyCode}
+                    className="mr-2 px-4 py-1.5 text-sm cursor-pointer rounded border border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20"
+                  >
+                    Join Code: <span className="font-semibold">{joinCode}</span>
+                  </div>
+                </TooltipTrigger>
+
+                <TooltipContent side="top" align="center">
+                  <p className="text-xs">Click to copy</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
-          <div className="h-6 w-6 flex items-center justify-center rounded-full bg-neutral-800 border border-neutral-800 text-neutral-400 mr-2">
+
+          <div className="h-8.5 w-8.5 flex items-center justify-center rounded-sm bg-neutral-800 border border-neutral-800 text-neutral-400 text-lg mr-2">
             <FiPlus />
           </div>
 
-          <div className="h-9 w-9 flex items-center justify-center rounded-sm bg-neutral-800 border border-neutral-800 text-neutral-400/95 mr-2">
+          <div className="h-8.5 w-8.5 flex items-center justify-center rounded-sm text-lg bg-neutral-800 border border-neutral-800 text-neutral-400/95 ">
             <IoSettingsOutline />
           </div>
 
@@ -136,15 +151,16 @@ export default function NewNavbar() {
             onClick={handleSave}
             className="text-sm flex items-center gap-1 justify-center text-neutral-200 bg-neutral-900 border border-neutral-800 px-4 m-2 hover:bg-neutral-800/50"
           >
-            <CiPlay1 />
+            <CiSaveDown2/>
             {loading ? "Saving..." : "Save"}
           </Button>
 
           <Button
             onClick={handleGoLive}
             disabled={goingLive}
-            className="bg-orange-600 text-neutral-100 text-sm px-4 py-1 hover:bg-orange-600/85 disabled:opacity-50"
+            className="bg-orange-600 text-neutral-100 text-sm px-3 py-1 hover:bg-orange-600/85 disabled:opacity-50"
           >
+            <FiPlay />
             {goingLive ? "Starting..." : "Go Live"}
           </Button>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarHeader,
@@ -22,10 +22,30 @@ import { PiTrophyBold } from "react-icons/pi";
 
 export function AppSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     router.push("/");
+  };
+
+  const linkClass = (href: string) => {
+    const active = pathname === href;
+
+    return `
+      relative flex items-center gap-2 w-full
+      transition-colors
+      ${active ? "bg-neutral-900 text-[#ff8a3d]" : "hover:bg-neutral-900"}
+
+      before:absolute before:left-0 before:top-1/2
+      before:-translate-y-1/2
+      before:h-6 before:w-[3px]
+      before:rounded-r-md
+      before:bg-[#ff8a3d]
+      before:origin-center
+      before:transition-all before:duration-200
+      ${active ? "before:opacity-100" : "before:opacity-0"}
+    `;
   };
 
   return (
@@ -36,13 +56,13 @@ export function AppSidebar() {
       <SidebarHeader className="h-14 border-b border-neutral-800">
         <div
           className="
-      flex h-full items-center px-2
-      justify-start
-      group-data-[collapsible=icon]:justify-center
-    "
+            flex h-full items-center px-2
+            justify-start
+            group-data-[collapsible=icon]:justify-center
+          "
         >
           <div className="flex items-center gap-1">
-            <div className=" text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
+            <div className="text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
               <LogoIcon />
             </div>
 
@@ -52,6 +72,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
@@ -61,7 +82,7 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/dashboard">
+                <a href="/dashboard" className={linkClass("/dashboard")}>
                   <FiHome className="size-4 shrink-0" />
                   <span className="group-data-[collapsible=icon]:hidden">
                     Dashboard
@@ -72,7 +93,10 @@ export function AppSidebar() {
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/dashboard/contests">
+                <a
+                  href="/dashboard/contests"
+                  className={linkClass("/dashboard/contests")}
+                >
                   <PiTrophyBold className="size-4 shrink-0" />
                   <span className="group-data-[collapsible=icon]:hidden">
                     Contests
@@ -80,9 +104,13 @@ export function AppSidebar() {
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/dashboard/created">
+                <a
+                  href="/dashboard/created"
+                  className={linkClass("/dashboard/created")}
+                >
                   <IoFileTrayStackedOutline className="size-4 shrink-0" />
                   <span className="group-data-[collapsible=icon]:hidden">
                     Created
@@ -90,9 +118,13 @@ export function AppSidebar() {
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
+
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/dashboard/quizzes">
+                <a
+                  href="/dashboard/quizzes"
+                  className={linkClass("/dashboard/quizzes")}
+                >
                   <HiOutlineRectangleStack className="size-4 shrink-0" />
                   <span className="group-data-[collapsible=icon]:hidden">
                     My Quizzes
@@ -107,7 +139,10 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-neutral-800">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="cursor-pointer">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="cursor-pointer hover:bg-neutral-900"
+            >
               <MdLogout className="size-4 shrink-0" />
               <span className="group-data-[collapsible=icon]:hidden">
                 Logout
@@ -119,4 +154,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
