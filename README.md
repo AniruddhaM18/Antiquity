@@ -38,8 +38,6 @@ Antiquity/
 ├── docker-compose.yml # PostgreSQL 16 + Redis 7
 ├── turbo.json # Turborepo pipeline config
 └── pnpm-workspace.yaml # PNPM workspace definition
-
-
 ---
 
 ## Prerequisites
