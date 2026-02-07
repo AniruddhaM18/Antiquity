@@ -26,20 +26,6 @@ A **live quiz & contest platform** — create contests, share join codes, run th
 
 ---
 
-## Project structure
-Antiquity/
-├── apps/
-│ ├── web/ # Next.js 16 app (App Router)
-│ └── backend/ # Express API (auth, contests, live)
-├── packages/
-│ ├── database/ # Prisma schema, client, migrations
-│ ├── config-eslint/ # Shared ESLint configuration
-│ └── config-typescript/ # Shared TypeScript configuration
-├── docker-compose.yml # PostgreSQL 16 + Redis 7
-├── turbo.json # Turborepo pipeline config
-└── pnpm-workspace.yaml # PNPM workspace definition
----
-
 ## Prerequisites
 
 - **Node.js** ≥ 18
