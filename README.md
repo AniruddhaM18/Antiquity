@@ -26,6 +26,24 @@ A **live quiz & contest platform** — create contests, share join codes, run th
 
 ---
 
+## Project structure
+
+```
+Antiquity/
+├── apps/
+│   ├── web/          # Next.js 16 app (App Router)
+│   └── backend/      # Express API (auth, contests, live)
+├── packages/
+│   ├── database/     # Prisma schema, client, migrations
+│   ├── config-eslint/
+│   └── config-typescript/
+├── docker-compose.yml   # PostgreSQL 16 + Redis 7
+├── turbo.json
+└── pnpm-workspace.yaml
+```
+
+---
+
 ## Prerequisites
 
 - **Node.js** ≥ 18
@@ -38,55 +56,104 @@ A **live quiz & contest platform** — create contests, share join codes, run th
 
 ### 1. Clone and install
 
-git clone 
+```bash
+git clone <your-repo-url>
 cd Antiquity
 pnpm install
+```
 
-----
 ### 2. Start Postgres and Redis
+
+```bash
 docker-compose up -d
-PostgreSQL 16 → localhost:5432 (user: postgres, password: postgres, DB: antiquity)
-Redis 7 → localhost:6379
+```
 
+- **PostgreSQL 16** → `localhost:5432` (user: `postgres`, password: `postgres`, DB: `antiquity`)
+- **Redis 7** → `localhost:6379`
 
--------
 ### 3. Environment variables
+
 Copy the example and set values:
+
+```bash
 cp .env.example .env
-Variable	Where	Description
-DATABASE_URL	Root / packages/database	e.g. postgresql://postgres:postgres@localhost:5432/antiquity?schema=public
-REDIS_HOST	Backend	Redis host (default: localhost)
-REDIS_PORT	Backend	Redis port (default: 6379)
-REDIS_PASSWORD	Backend	Optional Redis password
-JWT_SECRET	Backend	Secret for JWT (required for auth)
-FRONTEND_URL	Backend	Frontend origin for CORS, e.g. http://localhost:3000
-PORT	Backend	API port (default: 3001)
-NEXT_PUBLIC_BACKEND_URL	Web	Backend base URL, e.g. http://localhost:3001/api
+```
 
----------
+| Variable | Where | Description |
+|----------|--------|-------------|
+| `DATABASE_URL` | Root / packages/database | e.g. `postgresql://postgres:postgres@localhost:5432/antiquity?schema=public` |
+| `REDIS_HOST` | Backend | Redis host (default: `localhost`) |
+| `REDIS_PORT` | Backend | Redis port (default: `6379`) |
+| `REDIS_PASSWORD` | Backend | Optional Redis password |
+| `JWT_SECRET` | Backend | Secret for JWT (required for auth) |
+| `FRONTEND_URL` | Backend | Frontend origin for CORS, e.g. `http://localhost:3000` |
+| `PORT` | Backend | API port (default: `3001`) |
+| `NEXT_PUBLIC_BACKEND_URL` | Web | Backend base URL, e.g. `http://localhost:3001/api` |
+
+**Example `.env` (root):**
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/antiquity?schema=public"
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_SECRET=your-secret-key
+FRONTEND_URL=http://localhost:3000
+PORT=3001
+```
+
+**In `apps/web/.env`:**
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/antiquity?schema=public"
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3001/api
+```
+
 ### 4. Database setup
-pnpm run db:migrate:devpnpm run db:seed    # optional
 
+```bash
+pnpm run db:migrate:dev
+pnpm run db:seed    # optional
+```
 
-### 1. Run the app
+### 5. Run the app
+
+```bash
 pnpm run dev
-Frontend: http://localhost:3000
-Backend: http://localhost:3001 (e.g. GET /health)
-Scripts
-Command	Description
-pnpm dev	Run all apps in dev
-pnpm build	Build all apps and packages
-pnpm lint	Lint all workspaces
-pnpm format	Format with Prettier
-pnpm db:migrate:dev	Create and apply Prisma migrations
-pnpm db:migrate:deploy	Deploy migrations (e.g. production)
-pnpm db:push	Push schema without migrations
-pnpm db:seed	Seed database
-pnpm generate	Generate Prisma client
+```
 
+- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Backend:** [http://localhost:3001](http://localhost:3001) (e.g. `GET /health`)
 
-Redis and live contests
-Redis is used only for live contests:
-Contest state (current question, start/end, questions, members)
-Participant answers during the live run
-Live leaderboard computation.
+---
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Run all apps in dev |
+| `pnpm build` | Build all apps and packages |
+| `pnpm lint` | Lint all workspaces |
+| `pnpm format` | Format with Prettier |
+| `pnpm db:migrate:dev` | Create and apply Prisma migrations |
+| `pnpm db:migrate:deploy` | Deploy migrations (e.g. production) |
+| `pnpm db:push` | Push schema without migrations |
+| `pnpm db:seed` | Seed database |
+| `pnpm generate` | Generate Prisma client |
+
+---
+
+## Redis and live contests
+
+Redis is used only for **live contests**:
+
+- Contest state (current question, start/end, questions, members)
+- Participant answers during the live run
+- Live leaderboard computation
+
+Keys use a **1-hour TTL**. Ensure Redis is running when using live mode.
+
+---
+
+## License
+
+MIT
