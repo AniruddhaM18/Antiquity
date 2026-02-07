@@ -2,6 +2,11 @@
 
 A **live quiz & contest platform** — create contests, share join codes, run them in real time, and see live leaderboards. Built as a TypeScript monorepo with Next.js, Express, Prisma, PostgreSQL, and Redis.
 
+## Project Demo
+Video quality may affect due to upload size limitations.
+
+https://github.com/user-attachments/assets/05e828ff-72b3-4be7-ab70-bced5e07b5a9
+
 ---
 
 ## Features
@@ -153,9 +158,6 @@ Redis is used only for **live contests**:
 Keys use a **1-hour TTL**. Ensure Redis is running when using live mode.
 
 ---
-## Project Demo
-
-https://github.com/user-attachments/assets/05e828ff-72b3-4be7-ab70-bced5e07b5a9
 
 
 ## License
