@@ -153,6 +153,10 @@ Redis is used only for **live contests**:
 Keys use a **1-hour TTL**. Ensure Redis is running when using live mode.
 
 ---
+## Project Demo
+
+https://github.com/user-attachments/assets/05e828ff-72b3-4be7-ab70-bced5e07b5a9
+
 
 ## License
 
