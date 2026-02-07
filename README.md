@@ -1,199 +1,108 @@
-# Turborepo + Prisma ORM starter
+# Antiquity
 
-This is a example designed to help you quickly set up a Turborepo monorepo with a Next.js app and Prisma ORM. This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+A **live quiz & contest platform** — create contests, share join codes, run them in real time, and see live leaderboards. Built as a TypeScript monorepo with Next.js, Express, Prisma, PostgreSQL, and Redis.
 
-## What's inside?
+---
 
-This turborepo includes the following packages/apps:
+## Features
 
-### Apps and packages
+- **Authentication** — Sign up / sign in (Better Auth)
+- **Contests** — Create quizzes with MCQs and shareable join codes
+- **Live mode** — Host runs the quiz in real time; participants answer in sync
+- **Leaderboard** — Scores and rankings computed live from Redis
+- **Dashboard** — View created contests, participated contests, and quiz history
 
-- `web`: a [Next.js](https://nextjs.org/) app
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/database`: [Prisma ORM](https://prisma.io/) to manage & access your database
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Tech stack
 
-### Utilities
+| Layer | Technologies |
+|-------|--------------|
+| **Monorepo** | [Turborepo](https://turbo.build), [pnpm](https://pnpm.io) workspaces |
+| **Frontend** | [Next.js 16](https://nextjs.org), [React 19](https://react.dev), [Tailwind CSS v4](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com), [Framer Motion](https://www.framer.com/motion), [Zustand](https://zustand-demo.pmnd.rs) |
+| **Backend** | [Express 5](https://expressjs.com), [ioredis](https://github.com/redis/ioredis) |
+| **Database** | [Prisma](https://www.prisma.io), [PostgreSQL 16](https://www.postgresql.org) |
+| **Live state** | [Redis 7](https://redis.io) (contest state, answers, leaderboard; 1h TTL) |
 
-This turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-- [Prisma ORM](https://prisma.io/) for accessing the database
-- [Docker Compose](https://docs.docker.com/compose/) for a local MySQL database
+## Project structure
+Antiquity/
+├── apps/
+│ ├── web/ # Next.js 16 app (App Router)
+│ └── backend/ # Express API (auth, contests, live)
+├── packages/
+│ ├── database/ # Prisma schema, client, migrations
+│ ├── config-eslint/
+│ └── config-typescript/
+├── docker-compose.yml # PostgreSQL 16 + Redis 7
+├── turbo.json
+└── pnpm-workspace.yaml
+
+
+---
+
+## Prerequisites
+
+- **Node.js** ≥ 18
+- **pnpm** 9.x (`npm install -g pnpm`)
+- **Docker** & **Docker Compose** (for Postgres and Redis)
+
+---
 
 ## Getting started
 
-Follow these steps to set up and run your Turborepo project with Prisma ORM:
+### 1. Clone and install
 
-### 1. Create a Turborepo project
+git clone 
+cd Antiquity
+pnpm install
 
-Start by creating a new Turborepo project using the following command:
-
-```sh
-npx create-turbo@latest -e with-prisma
-```
-
-Choose your desired package manager when prompted and a name for the app (e.g., `my-turborepo`). This will scaffold a new Turborepo project with Prisma ORM included and dependencies installed.
-
-Navigate to your project directory:
-
-```bash
-cd ./my-turborepo
-```
-
-### 2. Setup a local database with Docker Compose
-
-We use [Prisma ORM](https://prisma.io/) to manage and access our database. As such you will need a database for this project, either locally or hosted in the cloud.
-
-To make this process easier, a [`docker-compose.yml` file](./docker-compose.yml) is included to setup a MySQL server locally with a new database named `turborepo`:
-
-Start the MySQL database using Docker Compose:
-
-```sh
+----
+### 2. Start Postgres and Redis
 docker-compose up -d
-```
+PostgreSQL 16 → localhost:5432 (user: postgres, password: postgres, DB: antiquity)
+Redis 7 → localhost:6379
 
-To change the default database name, update the `MYSQL_DATABASE` environment variable in the [`docker-compose.yml` file](/docker-compose.yml).
 
-### 3. Setup environment variables
+-------
+### 3. Environment variables
+Copy the example and set values:
+cp .env.example .env
+Variable	Where	Description
+DATABASE_URL	Root / packages/database	e.g. postgresql://postgres:postgres@localhost:5432/antiquity?schema=public
+REDIS_HOST	Backend	Redis host (default: localhost)
+REDIS_PORT	Backend	Redis port (default: 6379)
+REDIS_PASSWORD	Backend	Optional Redis password
+JWT_SECRET	Backend	Secret for JWT (required for auth)
+FRONTEND_URL	Backend	Frontend origin for CORS, e.g. http://localhost:3000
+PORT	Backend	API port (default: 3001)
+NEXT_PUBLIC_BACKEND_URL	Web	Backend base URL, e.g. http://localhost:3001/api
 
-Once the database is ready, copy the `.env.example` file to the [`/packages/database`](./packages/database/) and [`/apps/web`](./apps/web/) directories as `.env`:
+---------
+### 4. Database setup
+pnpm run db:migrate:devpnpm run db:seed    # optional
 
-```bash
-cp .env.example ./packages/database/.env
-cp .env.example ./apps/web/.env
-```
 
-This ensures Prisma has access to the `DATABASE_URL` environment variable, which is required to connect to your database.
-
-If you added a custom database name, or use a cloud based database, you will need to update the `DATABASE_URL` in your `.env` accordingly.
-
-### 4. Migrate your database
-
-Once your database is running, you’ll need to create and apply migrations to set up the necessary tables. Run the database migration command:
-
-```bash
-# Using npm
-npm run db:migrate:dev
-```
-
-<details>
-
-<summary>Expand for <code>yarn</code>, <code>pnpm</code> or <code>bun</code></summary>
-
-```bash
-# Using yarn
-yarn run db:migrate:dev
-
-# Using pnpm
-pnpm run db:migrate:dev
-
-# Using bun
-bun run db:migrate:dev
-```
-
-</details>
-
-You’ll be prompted to name the migration. Once you provide a name, Prisma will create and apply the migration to your database.
-
-> Note: The `db:migrate:dev` script (located in [packages/database/package.json](/packages/database/package.json)) uses [Prisma Migrate](https://www.prisma.io/migrate) under the hood.
-
-For production environments, always push schema changes to your database using the [`prisma migrate deploy` command](https://www.prisma.io/docs/orm/prisma-client/deployment/deploy-database-changes-with-prisma-migrate). You can find an example `db:migrate:deploy` script in the [`package.json` file](/packages/database/package.json) of the `database` package.
-
-### 5. Seed your database
-
-To populate your database with initial or fake data, use [Prisma's seeding functionality](https://www.prisma.io/docs/guides/database/seed-database).
-
-Update the seed script located at [`packages/database/src/seed.ts`](/packages/database/src/seed.ts) to include any additional data that you want to seed. Once edited, run the seed command:
-
-```bash
-# Using npm
-npm run db:seed
-```
-
-<details>
-
-<summary>Expand for <code>yarn</code>, <code>pnpm</code> or <code>bun</code></summary>
-
-```bash
-# Using yarn
-yarn run db:seed
-
-# Using pnpm
-pnpm run db:seed
-
-# Using bun
-bun run db:seed
-```
-
-</details>
-
-### 6. Build your application
-
-To build all apps and packages in the monorepo, run:
-
-```bash
-# Using npm
-npm run build
-```
-
-<details>
-
-<summary>Expand for <code>yarn</code>, <code>pnpm</code> or <code>bun</code></summary>
-
-```bash
-# Using yarn
-yarn run build
-
-# Using pnpm
-pnpm run build
-
-# Using bun
-bun run build
-```
-
-</details>
-
-### 7. Start the application
-
-Finally, start your application with:
-
-```bash
-yarn run dev
-```
-
-<details>
-
-<summary>Expand for <code>yarn</code>, <code>pnpm</code> or <code>bun</code></summary>
-
-```bash
-# Using yarn
-yarn run dev
-
-# Using pnpm
+### 1. Run the app
 pnpm run dev
+Frontend: http://localhost:3000
+Backend: http://localhost:3001 (e.g. GET /health)
+Scripts
+Command	Description
+pnpm dev	Run all apps in dev
+pnpm build	Build all apps and packages
+pnpm lint	Lint all workspaces
+pnpm format	Format with Prettier
+pnpm db:migrate:dev	Create and apply Prisma migrations
+pnpm db:migrate:deploy	Deploy migrations (e.g. production)
+pnpm db:push	Push schema without migrations
+pnpm db:seed	Seed database
+pnpm generate	Generate Prisma client
 
-# Using bun
-bun run dev
-```
 
-</details>
-
-Your app will be running at `http://localhost:3000`. Open it in your browser to see it in action!
-
-You can also read the official [detailed step-by-step guide from Prisma ORM](https://pris.ly/guide/turborepo?utm_campaign=turborepo-example) to build a project from scratch using Turborepo and Prisma ORM.
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Redis and live contests
+Redis is used only for live contests:
+Contest state (current question, start/end, questions, members)
+Participant answers during the live run
+Live leaderboard computation.
