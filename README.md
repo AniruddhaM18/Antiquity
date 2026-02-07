@@ -33,11 +33,11 @@ Antiquity/
 │ └── backend/ # Express API (auth, contests, live)
 ├── packages/
 │ ├── database/ # Prisma schema, client, migrations
-│ ├── config-eslint/
-│ └── config-typescript/
+│ ├── config-eslint/ # Shared ESLint configuration
+│ └── config-typescript/ # Shared TypeScript configuration
 ├── docker-compose.yml # PostgreSQL 16 + Redis 7
-├── turbo.json
-└── pnpm-workspace.yaml
+├── turbo.json # Turborepo pipeline config
+└── pnpm-workspace.yaml # PNPM workspace definition
 
 
 ---
