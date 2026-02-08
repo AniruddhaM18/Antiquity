@@ -323,11 +323,11 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
     setupLenis,
     updateCardTransforms
   ]);
-  
+
 
   return (
     <div
-      className={`relative w-full h-full overflow-y-auto overflow-x-visible ${className}`.trim()}
+      className={`relative w-full h-full overflow-y-auto overflow-x-visible [&::-webkit-scrollbar]:hidden ${className}`.trim()}
       ref={scrollerRef}
       style={{
         overscrollBehavior: 'contain',
@@ -335,8 +335,10 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
         scrollBehavior: 'smooth',
         WebkitTransform: 'translateZ(0)',
         transform: 'translateZ(0)',
-        willChange: 'scroll-position'
-      }}
+        willChange: 'scroll-position',
+        scrollbarWidth: 'none', // Firefox
+        msOverflowStyle: 'none', // IE/Edge
+      } as React.CSSProperties & { scrollbarWidth: string; msOverflowStyle: string }}
     >
       <div className="scroll-stack-inner pt-4 px-12 pb-[15rem] min-h-screen">
         {children}

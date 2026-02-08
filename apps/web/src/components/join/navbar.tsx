@@ -1,5 +1,6 @@
 "use client"
 import LogoIcon from "@/components/ui/logo"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { IoChevronBackOutline } from "react-icons/io5"
 
@@ -8,11 +9,11 @@ export default function JoinNavbar() {
 
   return (
     <nav className="min-h-16 w-screen bg-neutral-950 flex items-center font-inter border-b border-neutral-800 px-4">
-      <div className="flex items-center gap-2">
+      <Link href="/" className="flex items-center gap-2">
         <LogoIcon />
         <span className="text-neutral-300">Antiquity</span>
-      </div>
-      
+      </Link>
+
       <div className="ml-auto flex items-center gap-2">
         <button
           onClick={() => router.push("/home")}

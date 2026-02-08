@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Sidebar,
   SidebarHeader,
@@ -61,7 +62,7 @@ export function AppSidebar() {
             group-data-[collapsible=icon]:justify-center
           "
         >
-          <div className="flex items-center gap-1">
+          <Link href="/" className="flex items-center gap-1">
             <div className="text-purple-300 w-12 h-12 rounded-sm flex items-center justify-center shrink-0">
               <LogoIcon />
             </div>
@@ -69,7 +70,7 @@ export function AppSidebar() {
             <span className="text-xl font-semibold text-slate-300 whitespace-nowrap group-data-[collapsible=icon]:hidden">
               Antiquity
             </span>
-          </div>
+          </Link>
         </div>
       </SidebarHeader>
 

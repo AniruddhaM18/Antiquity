@@ -1,6 +1,7 @@
 "use client"
 
 import LogoIcon from "@/components/ui/logo"
+import Link from "next/link"
 import { FiPlay, FiPlus } from "react-icons/fi"
 import { BsSave } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5"
@@ -92,13 +93,10 @@ export default function NewNavbar() {
     <>
       <nav className="relative min-h-18 w-screen bg-neutral-950 flex items-center font-inter border-b border-neutral-800 px-6">
         {/* Left */}
-        <div>
+        <Link href="/" className="flex items-center">
           <LogoIcon />
-        </div>
-
-        <div className="text-inter text-neutral-300 ml-4">
-          Antiquity
-        </div>
+          <span className="text-inter text-neutral-300 ml-4">Antiquity</span>
+        </Link>
 
         {/* Center */}
         <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -151,7 +149,7 @@ export default function NewNavbar() {
             onClick={handleSave}
             className="text-sm flex items-center gap-1 justify-center text-neutral-200 bg-neutral-900 border border-neutral-800 px-4 m-2 hover:bg-neutral-800/50"
           >
-            <CiSaveDown2/>
+            <CiSaveDown2 />
             {loading ? "Saving..." : "Save"}
           </Button>
 

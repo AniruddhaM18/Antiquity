@@ -33,7 +33,7 @@ export default function Home() {
         </div>
       </div>
       {/* FEATURES SECTION */}
-      <section className="max-w-6xl mx-auto px-6 py-36">
+      <section className="max-w-6xl mx-auto px-6 pt-24 pb-0">
         <div className="text-center mb-4">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-100">
             Everything you need to engage
@@ -42,13 +42,11 @@ export default function Home() {
             Powerful features designed to make your contests interactive and memorable
           </p>
         </div>
-        <div className="w-full h-screen">
+        <div className="w-full">
           <LenisComponent />
         </div>
-        {/* <BentoGridDeck /> */}
       </section>
-      {/* HOW IT WORKS */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section className="max-w-6xl mx-auto px-6 pt-8 pb-24">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-200">
             How it works
@@ -57,7 +55,6 @@ export default function Home() {
             Three simple steps to engage your audience
           </p>
         </div>
-        {/* <WorksDeck /> */}
         <CanvasRevealEffectDemo />
       </section>
       <Footer />
