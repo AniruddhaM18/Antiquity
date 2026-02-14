@@ -24,7 +24,7 @@ export default function JoinForm({ joinCode, onJoinSuccess, onError }: JoinFormP
 
     setLoading(true)
     try {
-      const { data } = await api.post("/contest/join", {
+      const { data } = await api.post("/participants/contest/join", {
         joinCode: code.toUpperCase().trim()
       })
 

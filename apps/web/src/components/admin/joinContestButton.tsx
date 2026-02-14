@@ -59,7 +59,7 @@ export function JoinContestButton() {
           h-9
           bg-orange-600 text-neutral-100
           shadow-none
-          hover:bg-neutral-400
+          hover:bg-orange-400
           focus-visible:ring-0
           disabled:opacity-50
         "

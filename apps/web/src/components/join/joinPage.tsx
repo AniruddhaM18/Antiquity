@@ -157,7 +157,7 @@ export default function JoinPage() {
             <h2 className="text-xl font-semibold text-red-400 mb-2">Error</h2>
             <p className="text-sm text-red-300">{error}</p>
             <button
-              onClick={() => router.push("/home")}
+              onClick={() => router.push("/dashboard")}
               className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded text-sm text-red-400 transition"
             >
               Go Back Home
@@ -185,7 +185,7 @@ export default function JoinPage() {
               <Leaderboard />
             </div>
             <button
-              onClick={() => router.push("/home")}
+              onClick={() => router.push("/dashboard")}
               className="w-full px-4 py-3 rounded bg-orange-600 hover:bg-orange-500 text-white font-medium transition"
             >
               Go to Dashboard

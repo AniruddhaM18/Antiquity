@@ -44,7 +44,7 @@ export function SignupForm({
       })
 
       localStorage.setItem("token", data.token)
-      router.push("/home")
+      router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.")
       setIsLoading(false)

@@ -41,7 +41,7 @@ export function LoginForm({
       })
 
       localStorage.setItem("token", data.token)
-      router.push("/home")
+      router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Failed to sign in. Please try again.")
       setIsLoading(false)
