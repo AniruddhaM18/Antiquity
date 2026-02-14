@@ -31,7 +31,7 @@ export default function CreatePage() {
       if (!token) {
         setError("You are not logged in")
         setLoadingContest(false)
-        router.push("/home")
+        router.push("/dashboard")
         return
       }
 
@@ -44,7 +44,7 @@ export default function CreatePage() {
         // Check if user is the host
         if (!data.isHost) {
           setError("Access denied: Only the contest host can edit this quiz")
-          setTimeout(() => router.push("/home"), 2000)
+          setTimeout(() => router.push("/dashboard"), 2000)
           return
         }
 
@@ -75,7 +75,7 @@ export default function CreatePage() {
         }
 
         setTimeout(() => {
-          router.push("/home")
+          router.push("/dashboard")
         }, 2000)
       } finally {
         setLoadingContest(false)
@@ -174,7 +174,7 @@ export default function CreatePage() {
       {/* SIDEBAR */}
       <aside className="w-64 border-r border-neutral-800 p-4 space-y-3">
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/dashboard")}
           className="w-full text-left px-3 py-2 text-sm rounded border border-neutral-700 hover:bg-neutral-800 transition"
         >
           ← Home

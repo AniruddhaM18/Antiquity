@@ -5,7 +5,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { TbLayoutSidebarRightCollapse } from "react-icons/tb";
 
 const PATH_TITLES: Record<string, string> = {
-    "/dashboard": "Home",
+    "/dashboard": "Dashboard",
     "/dashboard/contests": "Participated Contests",
     "/dashboard/created": "Created Contests",
     "/dashboard/quizzes": "My Quizzes",

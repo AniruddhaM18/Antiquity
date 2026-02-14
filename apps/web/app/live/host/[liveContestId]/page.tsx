@@ -170,13 +170,22 @@ export default function HostLivePage() {
           <QuestionsPallate />
         </div>
 
-        {/* Center: Question Card */}
+        {/* Center: Question Card (header with End Quiz is inside the card) */}
         <div className="w-[55%] h-full flex flex-col">
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {currentQuestion ? (
               <HostQuestionCard
                 question={currentQuestion}
                 index={currentIndex}
+                headerRight={
+                  <button
+                    type="button"
+                    onClick={handleEnd}
+                    className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 text-white text-sm font-medium"
+                  >
+                    End Quiz
+                  </button>
+                }
               />
             ) : (
               <div className="flex items-center justify-center h-full text-neutral-400">
@@ -192,21 +201,15 @@ export default function HostLivePage() {
             >
               Previous
             </button>
-            <div className="text-sm text-neutral-400">
+            <span className="text-sm text-neutral-400">
               Question {currentIndex + 1} of {total}
-            </div>
+            </span>
             <button
               onClick={next}
               disabled={isLastQuestion}
               className="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 disabled:opacity-50"
             >
               Next
-            </button>
-            <button
-              onClick={handleEnd}
-              className="px-4 py-2 rounded bg-red-600 hover:bg-red-500"
-            >
-              End Quiz
             </button>
           </div>
         </div>

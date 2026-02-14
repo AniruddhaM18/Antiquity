@@ -1,13 +1,16 @@
 "use client"
 
-import NewLivePage from "@/src/components/live/LivePage"
-import LivePage from "../live/[id]/page"
+import TestNavbar from "@/src/components/TestNavbar"
+
+// import NewLivePage from "@/src/components/live/LivePage"
+// import LivePage from "../live/[id]/page"
 
 
 export default function TestPage() {
   return (
     <div>
-      <NewLivePage />
+      {/* <NewLivePage /> */}
+      <TestNavbar />
     </div>
   )
 }

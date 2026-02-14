@@ -27,7 +27,7 @@ export default function NewPage() {
         // Contest exists - check if user is host
         if (!data.isHost) {
           setError("Access denied: Only the contest host can edit this quiz")
-          setTimeout(() => router.push("/home"), 2000)
+          setTimeout(() => router.push("/dashboard"), 2000)
           return
         }
         setIsHost(true)
@@ -39,7 +39,7 @@ export default function NewPage() {
           // Don't try to load - it's a new contest
         } else {
           setError(err.message || "Failed to load contest")
-          setTimeout(() => router.push("/home"), 2000)
+          setTimeout(() => router.push("/dashboard"), 2000)
         }
       } finally {
         setLoading(false)
@@ -72,7 +72,7 @@ export default function NewPage() {
           <div className="text-red-400 text-lg font-medium mb-2">
             {error || "Access Denied"}
           </div>
-          <p className="text-neutral-500 text-sm">Redirecting to home...</p>
+          <p className="text-neutral-500 text-sm">Redirecting to dashboard...</p>
         </div>
       </main>
     )
