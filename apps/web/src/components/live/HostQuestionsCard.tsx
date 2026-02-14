@@ -9,22 +9,24 @@ type Props = {
         correct?: number
     }
     index: number
+    /** Optional content for the right side of the header (e.g. End Quiz button) */
+    headerRight?: React.ReactNode
 }
 
 /**
  * Read-only question card for hosts.
- * Shows the correct answer highlighted in green.
- * No interaction allowed.
+ * Header shows "Question X" and optional headerRight (e.g. End Quiz). Stays visible when scrolling.
  */
-export default function HostQuestionCard({ question, index }: Props) {
+export default function HostQuestionCard({ question, index, headerRight }: Props) {
     const correctIndex = question.correct ?? 0
 
     return (
         <div className="w-full bg-neutral-950 text-neutral-200">
-            <div className="px-4 py-4 border-b border-neutral-800 bg-neutral-900">
-                <span className="text-lg font-semibold">
+            <div className="sticky top-0 z-10 px-4 py-4 border-b border-neutral-800 bg-neutral-900 flex items-center justify-between gap-3">
+                <span className="text-lg font-semibold shrink-0 text-white">
                     Question {index + 1}
                 </span>
+                {headerRight != null ? <div className="shrink-0 ml-auto">{headerRight}</div> : null}
             </div>
             <div className="p-4">
                 <p className="mb-5 py-2 text-lg font-medium leading-relaxed">

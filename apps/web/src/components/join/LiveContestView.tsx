@@ -180,7 +180,7 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
             <Leaderboard />
           </div>
           <button
-            onClick={() => router.push("/home")}
+            onClick={() => router.push("/dashboard")}
             className="w-full px-4 py-3 rounded bg-orange-600 hover:bg-orange-500 text-white font-medium transition"
           >
             Go to Dashboard

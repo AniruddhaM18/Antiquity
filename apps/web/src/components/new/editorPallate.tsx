@@ -15,7 +15,7 @@ export default function EditorPallate() {
 
 
     return (
-        <div className="h-full w-48 bg-neutral-950 p-4">
+        <div className="h-full w-48 bg-neutral-950 p-2">
             <h1 className="text-sm text-neutral-400">Controls</h1>
             <section >
                 <div className="flex justify-center pt-3">

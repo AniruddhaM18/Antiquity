@@ -16,7 +16,7 @@ export default function JoinNavbar() {
 
       <div className="ml-auto flex items-center gap-2">
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/dashboard")}
           className="h-8 px-3 rounded-sm flex items-center gap-2 text-sm text-neutral-300 bg-neutral-800 border border-neutral-700 hover:bg-neutral-800/80 transition"
         >
           <IoChevronBackOutline className="size-4" />

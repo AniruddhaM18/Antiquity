@@ -21,7 +21,7 @@ export default function NewSidebar() {
         <aside className="w-72 h-auto bg-neutral-950 p-4 flex flex-col gap-3 border-r border-neutral-800 cursor-pointer">
             {/* HOME */}
             {/* <button
-                onClick={() => router.push("/home")}
+                onClick={() => router.push("/dashboard")}
                 className="w-full inline-flex items-center gap-2 text-left px-3 py-2 text-sm rounded border border-neutral-700 hover:bg-neutral-800 transition"
             >
                 <IoChevronBackOutline className="" />
@@ -29,7 +29,7 @@ export default function NewSidebar() {
             </button> */}
             {/* <div className="flex items-center text-left gap-2 px-2 mt-1 mb-1">
                 <button
-                    onClick={() => router.push("/home")} className="h-6 w-6 rounded-sm flex items-center justify-center p-1 text-neutral-300  bg-neutral-700  text-sm hover:bg-neutral-800 transition">
+                    onClick={() => router.push("/dashboard")} className="h-6 w-6 rounded-sm flex items-center justify-center p-1 text-neutral-300  bg-neutral-700  text-sm hover:bg-neutral-800 transition">
                     <IoChevronBackOutline className="size-5" />
                 </button>
                 <span className="text-left"> Home </span>

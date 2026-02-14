@@ -3,7 +3,6 @@
 import LogoIcon from "@/components/ui/logo"
 import Link from "next/link"
 import { FiPlay, FiPlus } from "react-icons/fi"
-import { BsSave } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { useQuestionStore } from "@/src/store/useQuestionStore"
@@ -12,8 +11,6 @@ import { startLiveContest, fetchContest } from "@/lib/contestApi"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { CiSaveDown2 } from "react-icons/ci";
-import { CiPlay1 } from "react-icons/ci";
-
 
 
 export default function NewNavbar() {
@@ -123,7 +120,9 @@ export default function NewNavbar() {
                 <TooltipTrigger asChild>
                   <div
                     onClick={copyCode}
-                    className="mr-2 px-4 py-1.5 text-sm cursor-pointer rounded border border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20"
+                    className="mr-2 px-4 py-1.5 text-sm cursor-pointer rounded border border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 
+                    transition-all duration-150 ease-out 
+                    active:scale-98"
                   >
                     Join Code: <span className="font-semibold">{joinCode}</span>
                   </div>
@@ -192,4 +191,3 @@ export default function NewNavbar() {
     </>
   )
 }
-
