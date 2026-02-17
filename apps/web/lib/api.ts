@@ -5,6 +5,7 @@ export const api = axios.create({
 });
 
 // Attach JWT on every request (client-side)
+// This will use localStorage as fallback, but AuthContext should be the primary source
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");

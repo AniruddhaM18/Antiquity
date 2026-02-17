@@ -44,8 +44,11 @@ export async function getCurrentQuestion(liveContestId: string) {
   return data;
 }
 
-export async function submitLiveAnswer(liveContestId: string, selected: number) {
-  const { data } = await api.post(`/live/${liveContestId}/respond`, { selected });
+export async function submitLiveAnswer(liveContestId: string, selected: number, questionIndex?: number) {
+  const { data } = await api.post(`/live/${liveContestId}/respond`, { 
+    selected,
+    questionIndex // Send questionIndex so backend knows which question was answered
+  });
   if (!data.success) throw new Error(data.message || "Failed to submit");
   return data;
 }
