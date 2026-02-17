@@ -11,6 +11,7 @@ import Leaderboard from "@/src/components/live/Leaderboard";
 import { fetchContest, joinContestByCode } from "@/lib/contestApi";
 import { Contest } from "@/src/components/types";
 import { useLiveQuizStore } from "@/src/store/LiveQuestionStore";
+import { useAuth } from "@/context/AuthContext";
 
 type JoinState = "loading" | "form" | "joined" | "waiting" | "live" | "ended" | "error";
 
@@ -31,6 +32,7 @@ const DUMMY_CONTEST: Contest = {
 export default function JoinPage() {
   const params = useParams();
   const router = useRouter();
+  const { token, isAuthenticated } = useAuth();
   const joinCode = (params?.id as string)?.toUpperCase?.()?.trim();
   const [useDummy] = useState(false);
 
@@ -46,8 +48,7 @@ export default function JoinPage() {
       return;
     }
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token && !useDummy) {
+    if (!isAuthenticated && !useDummy) {
       router.push("/auth/signin");
       return;
     }

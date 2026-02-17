@@ -81,8 +81,12 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
           // If all questions answered, mark as finished
           if (nextIndex >= questions.length) {
             setFinished(true);
-          } else {
+          } else if (nextIndex >= 0 && nextIndex < questions.length) {
+            // Ensure index is within bounds before setting
             setCurrentIndex(nextIndex);
+          } else {
+            // Fallback to first question if index is invalid
+            setCurrentIndex(0);
           }
         }
       } catch {
@@ -145,9 +149,16 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
     // Avoid submitting the same question twice
     if (submittedQuestions.current.has(questionId)) return;
 
+    // Find the questionIndex for this questionId
+    const questionIndex = contest.questions.findIndex(q => q.id === questionId);
+    if (questionIndex === -1) {
+      console.error('Question not found:', questionId);
+      return;
+    }
+
     submittedQuestions.current.add(questionId);
 
-    submitLiveAnswer(liveContestId, optionIndex)
+    submitLiveAnswer(liveContestId, optionIndex, questionIndex)
       .then(() => {
         // Trigger leaderboard refresh after successful submission
         useLiveQuizStore.getState().triggerLeaderboardRefresh();
@@ -156,7 +167,7 @@ export default function LiveContestView({ contestId, liveContestId, contest }: L
         // Remove from submitted set if failed, so user can retry
         submittedQuestions.current.delete(questionId);
       });
-  }, [liveContestId]);
+  }, [liveContestId, contest.questions]);
 
   // Finish quiz (called when user clicks Submit Quiz on last question)
   const handleFinishQuiz = useCallback(() => {

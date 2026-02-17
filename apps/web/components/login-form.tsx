@@ -15,15 +15,16 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { signin } from "@/src/actions/auth"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,15 +36,14 @@ export function LoginForm({
     const form = new FormData(e.currentTarget)
 
     try {
-      const data = await signin({
-        email: form.get("email") as string,
-        password: form.get("password") as string,
-      })
-
-      localStorage.setItem("token", data.token)
+      await login(
+        form.get("email") as string,
+        form.get("password") as string
+      )
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Failed to sign in. Please try again.")
+    } finally {
       setIsLoading(false)
     }
   }

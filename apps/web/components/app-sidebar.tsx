@@ -20,13 +20,15 @@ import { HiOutlineRectangleStack } from "react-icons/hi2";
 import { MdLogout } from "react-icons/md";
 import { FiHome } from "react-icons/fi";
 import { PiTrophyBold } from "react-icons/pi";
+import { useAuth } from "@/context/AuthContext";
 
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     router.push("/");
   };
 

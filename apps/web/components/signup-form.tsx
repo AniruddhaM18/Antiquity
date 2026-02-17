@@ -16,16 +16,17 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { signup } from "@/src/actions/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const { signup } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,16 +38,15 @@ export function SignupForm({
     const form = new FormData(e.currentTarget)
 
     try {
-      const data = await signup({
-        name: form.get("name") as string,
-        email: form.get("email") as string,
-        password: form.get("password") as string,
-      })
-
-      localStorage.setItem("token", data.token)
+      await signup(
+        form.get("name") as string,
+        form.get("email") as string,
+        form.get("password") as string
+      )
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.")
+    } finally {
       setIsLoading(false)
     }
   }

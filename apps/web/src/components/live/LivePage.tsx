@@ -3,6 +3,7 @@ import LiveQuestionCard from "@/src/components/live/LiveQuestionCard"
 import QuestionsPallate from "./QuestionsPallate"
 import { useLiveQuizStore } from "@/src/store/LiveQuestionStore"
 import LiveQuestionNavigation from "./LiveQuestionNavigation"
+import { useEffect } from "react"
 
 type Props = {
   /** Called when user moves to next question (submits current answer). */
@@ -20,6 +21,21 @@ export const dummyLiveQuestion = {
 export default function NewLivePage({ onSubmitAnswer, onFinishQuiz }: Props) {
   const contest = useLiveQuizStore((s) => s.contest)
   const currentIndex = useLiveQuizStore((s) => s.currentIndex)
+  const setCurrentIndex = useLiveQuizStore((s) => s.setCurrentIndex)
+
+  // Ensure currentIndex is within bounds when contest loads
+  useEffect(() => {
+    if (contest && contest.questions.length > 0) {
+      if (currentIndex < 0 || currentIndex >= contest.questions.length) {
+        setCurrentIndex(0)
+      }
+    }
+  }, [contest, currentIndex, setCurrentIndex])
+
+  // Ensure currentIndex is within bounds
+  const safeIndex = contest && contest.questions.length > 0 
+    ? Math.max(0, Math.min(currentIndex, contest.questions.length - 1))
+    : 0
 
   return (
     <div className="w-screen h-full bg-neutral-950 flex">
@@ -32,10 +48,10 @@ export default function NewLivePage({ onSubmitAnswer, onFinishQuiz }: Props) {
       <div className="w-[55%] h-full flex flex-col">
         {/* Question area - takes remaining space */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {contest && contest.questions[currentIndex] ? (
+          {contest && contest.questions[safeIndex] ? (
             <LiveQuestionCard
-              question={contest.questions[currentIndex]}
-              index={currentIndex}
+              question={contest.questions[safeIndex]}
+              index={safeIndex}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-neutral-400">
