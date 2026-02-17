@@ -3,23 +3,27 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import axios from "axios"
 import { api } from "@/lib/api"
+import { useAuth } from "@/context/AuthContext"
 
 export default function QuizDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [contest, setContest] = useState<any>(null)
 
   useEffect(() => {
-    const fetch = async () => {
-      const token = localStorage.getItem("token")
-      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+    if (!isAuthenticated) {
+      router.push("/auth/signin")
+      return
+    }
 
+    const fetch = async () => {
       const { data } = await api.get(`/contests/get/${id}`);
       setContest(data.contest)
     }
 
     fetch()
-  }, [id])
+  }, [id, isAuthenticated, router])
 
   if (!contest) return <div className="p-6">Loading...</div>
 

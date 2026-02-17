@@ -6,11 +6,13 @@ import QuestionsCard from "@/src/components/QuestionsCard"
 import { useRouter, useParams } from "next/navigation"
 import { api } from "@/lib/api"
 import { QuestionValue } from "@/src/store/useQuestionStore"
+import { useAuth } from "@/context/AuthContext"
 
 
 export default function CreatePage() {
   const router = useRouter()
   const params = useParams()
+  const { isAuthenticated } = useAuth()
   const contestId = params?.id as string
 
   const [questions, setQuestions] = useState<QuestionValue[]>([])
@@ -26,9 +28,7 @@ export default function CreatePage() {
     if (!contestId) return
 
     const fetchContestData = async () => {
-      const token = localStorage.getItem("token")
-
-      if (!token) {
+      if (!isAuthenticated) {
         setError("You are not logged in")
         setLoadingContest(false)
         router.push("/dashboard")
@@ -83,7 +83,7 @@ export default function CreatePage() {
     }
 
     fetchContestData()
-  }, [contestId, router])
+  }, [contestId, router, isAuthenticated])
 
   // QUESTION OPERATIONS
   function addQuestion() {

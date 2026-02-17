@@ -82,8 +82,12 @@ export default function HostLivePage() {
         setLiveIds(liveContestId, c.id)
 
         // Restore current index from server state for host re-entry
-        if (typeof c.live?.currentIndex === "number" && c.live.currentIndex > 0) {
+        // Only set if it's within bounds of the questions array
+        if (typeof c.live?.currentIndex === "number" && c.live.currentIndex >= 0 && c.live.currentIndex < questions.length) {
           useLiveQuizStore.getState().setCurrentIndex(c.live.currentIndex)
+        } else {
+          // Reset to 0 if index is out of bounds
+          useLiveQuizStore.getState().setCurrentIndex(0)
         }
       } catch (e) {
         if (!cancelled) setError("Failed to load contest")
