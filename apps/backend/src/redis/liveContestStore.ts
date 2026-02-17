@@ -173,28 +173,79 @@ async nextQuestion(contestId: string): Promise<number | null> {
         const state = await this.getByLiveId(liveContestId);
         if (!state) return [];
 
-        //get all response keys for the contes
+        //get all response keys for the contest
         const pattern = KEYS.allResponses(liveContestId);
-        const keys = await this.scanKeys(pattern);
+        const allKeys = await this.scanKeys(pattern);
 
-        if (keys.length === 0) return [];
+        if (allKeys.length === 0) return [];
+        
+        // Filter out SET keys (user response sets) - only keep individual response keys
+        // Individual response keys: response:${liveContestId}:${userId}:${questionIndex} (4 parts)
+        // SET keys: response:${liveContestId}:${userId} (3 parts)
+        const responseKeys = allKeys.filter(key => {
+            const parts = key.split(':');
+            // Only individual response keys have 4 parts (response:liveContestId:userId:questionIndex)
+            // SET keys have 3 parts (response:liveContestId:userId)
+            return parts.length === 4 && parts[0] === 'response';
+        });
+
+        console.log(`[Leaderboard] Found ${allKeys.length} total keys, ${responseKeys.length} response keys for liveContestId: ${liveContestId}`);
+
+        if (responseKeys.length === 0) return [];
+        
         //fetch all responses
-        const responseData = await redis.mget(...keys);
+        const responseData = await redis.mget(...responseKeys);
         const responses = responseData
             .filter((data): data is string => data !== null)
-            .map(data => JSON.parse(data) as Response);
+            .map(data => {
+                try {
+                    return JSON.parse(data) as Response;
+                } catch (e) {
+                    console.error('Failed to parse response:', e, data);
+                    return null;
+                }
+            })
+            .filter((r): r is Response => r !== null);
 
-        //calculate score
+        console.log(`[Leaderboard] Parsed ${responses.length} valid responses`);
+
+        //calculate score - use a Map to track responses per user per question to avoid duplicates
         const scores = new Map<string, { score: number; correct: number }>();
+        const processedResponses = new Map<string, Set<number>>(); // userId -> Set<questionIndex>
 
         for (const response of responses) {
+            // Validate response has required fields
+            if (!response.userId || typeof response.questionIndex !== 'number' || typeof response.isCorrect !== 'boolean') {
+                console.warn('[Leaderboard] Invalid response format:', response);
+                continue;
+            }
+
             const question = state.questions[response.questionIndex];
-            if (!question) continue;
+            if (!question) {
+                console.warn(`[Leaderboard] Question at index ${response.questionIndex} not found in state (total questions: ${state.questions.length})`);
+                continue;
+            }
+
+            // Track which questions we've already processed for this user
+            if (!processedResponses.has(response.userId)) {
+                processedResponses.set(response.userId, new Set());
+            }
+            const userProcessed = processedResponses.get(response.userId)!;
+
+            // Skip if we've already processed this question for this user (handle duplicates)
+            if (userProcessed.has(response.questionIndex)) {
+                console.warn(`[Leaderboard] Duplicate response detected for user ${response.userId}, question ${response.questionIndex}`);
+                continue;
+            }
+
+            userProcessed.add(response.questionIndex);
 
             const current = scores.get(response.userId) || { score: 0, correct: 0 };
 
             if (response.isCorrect) {
-                current.score += question.points;
+                // Use question.points with fallback to 10 (schema default)
+                const points = question.points ?? 10;
+                current.score += points;
                 current.correct++;
             }
 

@@ -6,7 +6,7 @@ import { liveContestStore } from "../redis/liveContestStore.js";
 export async function submitAnswer(req: Request, res: Response) {
     try {
         const { liveContestId } = req.params;
-        const { selected } = req.body;
+        const { selected, questionIndex } = req.body;
         const userId = req.user!.id;
 
         if (typeof selected !== "number" || selected < 0) {
@@ -59,16 +59,21 @@ export async function submitAnswer(req: Request, res: Response) {
             });
         }
 
-        const currentQuestion = state.questions[state.currentIndex];
+        // Use provided questionIndex, or fallback to server's currentIndex
+        const targetQuestionIndex = typeof questionIndex === 'number' && questionIndex >= 0 
+            ? questionIndex 
+            : state.currentIndex;
 
-        if (!currentQuestion) {
+        const targetQuestion = state.questions[targetQuestionIndex];
+
+        if (!targetQuestion) {
             return res.status(400).json({
                 success: false,
-                message: "No current question"
+                message: `Question at index ${targetQuestionIndex} not found`
             });
         }
 
-        const options = currentQuestion.options as string[];
+        const options = targetQuestion.options as string[];
 
         if (!Array.isArray(options) || selected >= options.length) {
             return res.status(400).json({
@@ -78,13 +83,13 @@ export async function submitAnswer(req: Request, res: Response) {
         }
 
         // Calculate correctness
-        const isCorrect = selected === currentQuestion.correct;
+        const isCorrect = selected === targetQuestion.correct;
 
         // Store in Redis (no DB query!)
         await liveContestStore.submitAnswer(
             liveContestId,
             userId,
-            state.currentIndex,
+            targetQuestionIndex,
             selected,
             isCorrect
         );
