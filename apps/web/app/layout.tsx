@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 
 const PoppinsFont = Poppins({
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body
         className={`${PoppinsFont.className}  antialiased tracking-wide`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
